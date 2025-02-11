@@ -1,0 +1,12 @@
+шлюз - https://modkam.ru/2019/11/25/obnovljaem-shljuz-xiaomi/ 
+прошивка - https://github.com/slsys/Gateway
+
+#======================================================================#
+
+умные дома приложения
+
+tuya smart
+https://play.google.com/store/apps/details?id=com.tuya.smart&hl=en&pli=1 
+
+xiaomi home
+https://play.google.com/store/apps/details?id=com.xiaomi.smarthome
