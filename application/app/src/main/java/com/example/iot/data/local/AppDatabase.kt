@@ -1,24 +1,29 @@
-package com.example.iot
+package com.example.iot.data.local
 
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.example.iot.data.local.broker.Broker
+import com.example.iot.data.local.broker.BrokerDao
+import com.example.iot.data.local.device.Device
+import com.example.iot.data.local.device.DeviceDAO
 
-@Database(entities = [Device::class], version = 1)
+@Database(entities = [Broker::class, Device::class], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
-    abstract fun deviceDao(): DeviceDao
+    abstract fun brokerDao(): BrokerDao
+    abstract fun deviceDao(): DeviceDAO
 
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
-        fun getDatabase(context: Context): AppDatabase {
+        fun getInstance(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "smart_home_db"
+                    "app_database"
                 ).build()
                 INSTANCE = instance
                 instance
