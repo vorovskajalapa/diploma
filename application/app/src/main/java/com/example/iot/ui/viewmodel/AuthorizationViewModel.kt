@@ -8,7 +8,7 @@ import com.example.iot.data.local.AppDatabase
 import com.example.iot.data.local.broker.Broker
 import kotlinx.coroutines.launch
 
-class BrokerViewModel(private val db: AppDatabase) : ViewModel() {
+class AuthorizationViewModel(private val db: AppDatabase) : ViewModel() {
     private val brokerDao = db.brokerDao()
 
     private val _brokers = MutableLiveData<List<Broker>>(emptyList())

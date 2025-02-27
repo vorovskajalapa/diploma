@@ -2,8 +2,6 @@ package com.example.iot.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -15,12 +13,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.example.iot.R
 import com.example.iot.data.local.broker.Broker
-import com.example.iot.ui.viewmodel.BrokerViewModel
+import com.example.iot.ui.viewmodel.AuthorizationViewModel
 
 @Composable
-fun BrokerScreen(viewModel: BrokerViewModel) {
+fun AuthorizationScreen(navController: NavHostController, viewModel: AuthorizationViewModel) {
     var serverUri by remember { mutableStateOf("") }
     var serverPort by remember { mutableStateOf("") }
     var user by remember { mutableStateOf("") }
@@ -121,7 +120,7 @@ fun BrokerScreen(viewModel: BrokerViewModel) {
             BrokerItem(
                 broker,
                 onDelete = { viewModel.deleteBroker(broker) },
-                onLogin = { /* Вызов логики входа */ }
+                onLogin = { navController.navigate("home") }
             )
         }
     }
