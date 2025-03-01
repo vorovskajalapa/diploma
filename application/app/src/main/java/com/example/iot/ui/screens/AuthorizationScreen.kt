@@ -8,6 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -40,10 +41,14 @@ fun AuthorizationScreen(navController: NavHostController, viewModel: Authorizati
         Image(
             painter = painterResource(id = R.drawable.mqtt_logo),
             contentDescription = "Broker Logo",
-            modifier = Modifier.size(150.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .aspectRatio(4f)
+                .clip(RoundedCornerShape(12.dp)),
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(50.dp))
 
         Column(modifier = Modifier.fillMaxWidth()) {
             OutlinedTextField(
@@ -111,7 +116,7 @@ fun AuthorizationScreen(navController: NavHostController, viewModel: Authorizati
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         lastBroker?.let { broker ->
             Text("Последний сохранённый брокер:", style = MaterialTheme.typography.labelMedium)
 

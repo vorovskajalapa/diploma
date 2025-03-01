@@ -24,9 +24,18 @@ class AuthorizationViewModel(private val db: AppDatabase) : ViewModel() {
         }
     }
 
+    suspend fun hasSavedBrokerInDb(): Boolean {
+        return brokerDao.getAllBrokers().isNotEmpty()
+    }
+
     fun addBroker(serverUri: String, serverPort: Int, user: String?, password: String?) {
         viewModelScope.launch {
-            val broker = Broker(serverUri = serverUri, serverPort = serverPort, user = user, password = password)
+            val broker = Broker(
+                serverUri = serverUri,
+                serverPort = serverPort,
+                user = user,
+                password = password
+            )
             brokerDao.insert(broker)
             loadBrokers()
         }
