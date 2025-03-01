@@ -18,21 +18,31 @@ import com.example.iot.ui.viewmodel.AuthorizationViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.NavHostController
+import com.example.iot.data.mqtt.MqttClientHelper
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.eclipse.paho.client.mqttv3.MqttMessage
 
 class MainActivity : ComponentActivity() {
+    private lateinit var mqttClientHelper: MqttClientHelper
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
 
         val db = AppDatabase.getInstance(applicationContext)
         val viewModel = AuthorizationViewModel(db)
 
+        mqttClientHelper = MqttClientHelper(applicationContext)
+
         lifecycleScope.launch {
-            // first auth -> home
+            // Проверяем, есть ли сохранённый брокер
             val startDestination = if (viewModel.hasSavedBrokerInDb()) "auth" else "auth"
-            // check if reachable connection and them home
-            // else auth
+
+            // Подключаемся к MQTT
+            mqttClientHelper.connect()
+
+            delay(2000) // Ждём 2 секунды на подключение
+            sendTestMessage()
 
             runOnUiThread {
                 setContent {
@@ -42,7 +52,20 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    private fun sendTestMessage() {
+        try {
+            val message = MqttMessage("Hello from Android".toByteArray())
+            message.qos = 1
+            mqttClientHelper.mqttClient?.publish("test_publish", message)
+            println("✅ MQTT: Сообщение отправлено в test_publish")
+        } catch (e: Exception) {
+            e.printStackTrace()
+            println("❌ MQTT: Ошибка отправки сообщения: " + e.message)
+        }
+    }
 }
+
 
 @Composable
 fun AppNavHost(navController: NavHostController, viewModel: AuthorizationViewModel, startDestination: String) {
