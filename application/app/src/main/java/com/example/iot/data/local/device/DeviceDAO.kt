@@ -10,6 +10,9 @@ interface DeviceDAO {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(device: Device)
 
+    @Query("SELECT * FROM devices WHERE brokerId = :brokerId")
+    suspend fun getDevicesByBroker(brokerId: Int): List<Device>
+
     @Query("SELECT * FROM devices WHERE ieeeAddr = :ieeeAddr LIMIT 1")
     suspend fun getDeviceByIeeeAddr(ieeeAddr: String): Device?
 }

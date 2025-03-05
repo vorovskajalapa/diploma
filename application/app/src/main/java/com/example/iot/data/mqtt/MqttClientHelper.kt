@@ -20,7 +20,7 @@ class MqttClientHelper(context: Context?) {
             val friendlyName = deviceJson.getString("friendly_name")
             val modelId = deviceJson.getString("ModelId")
 
-            val device = Device.create(ieeeAddr, friendlyName, modelId, null)
+            val device = Device.create(ieeeAddr, friendlyName, modelId, null,1)
 
             Log.i("DEVICE", "📡 Получен девайс: $device")
         } catch (e: Exception) {

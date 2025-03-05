@@ -46,6 +46,8 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
+//            Log.i("devices",db.deviceDao().getDevicesByBroker(1).toString())
+
             runOnUiThread {
                 setContent {
                     val navController = rememberNavController()
