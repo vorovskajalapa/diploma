@@ -1,11 +1,7 @@
 package com.example.iot
 
 import android.os.Bundle
-import android.view.WindowInsets
-import android.view.WindowInsetsController
-import android.view.View
-import android.os.Build
-import android.view.WindowManager
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
@@ -19,12 +15,18 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.NavHostController
 import com.example.iot.data.mqtt.MqttClientHelper
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.eclipse.paho.client.mqttv3.MqttMessage
+import kotlinx.coroutines.withTimeoutOrNull
 
 class MainActivity : ComponentActivity() {
     private lateinit var mqttClientHelper: MqttClientHelper
+
+    private suspend fun connectWithTimeout(): Boolean {
+        return withTimeoutOrNull(2000) {
+            mqttClientHelper.connect() == 1
+        } ?: false
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,14 +37,14 @@ class MainActivity : ComponentActivity() {
         mqttClientHelper = MqttClientHelper(applicationContext)
 
         lifecycleScope.launch {
-            // Проверяем, есть ли сохранённый брокер
-            val startDestination = if (viewModel.hasSavedBrokerInDb()) "auth" else "auth"
+            val checkSavedInstance = viewModel.hasSavedBrokerInDb()
+            var startDestination = "auth"
 
-            // Подключаемся к MQTT
-            mqttClientHelper.connect()
-
-            delay(2000) // Ждём 2 секунды на подключение
-            sendTestMessage()
+            if (checkSavedInstance) {
+                if (connectWithTimeout()) {
+                    startDestination = "home";
+                }
+            }
 
             runOnUiThread {
                 setContent {
@@ -52,20 +54,7 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-    private fun sendTestMessage() {
-        try {
-            val message = MqttMessage("Hello from Android".toByteArray())
-            message.qos = 1
-            mqttClientHelper.mqttClient?.publish("test_publish", message)
-            println("✅ MQTT: Сообщение отправлено в test_publish")
-        } catch (e: Exception) {
-            e.printStackTrace()
-            println("❌ MQTT: Ошибка отправки сообщения: " + e.message)
-        }
-    }
 }
-
 
 @Composable
 fun AppNavHost(navController: NavHostController, viewModel: AuthorizationViewModel, startDestination: String) {

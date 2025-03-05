@@ -41,6 +41,8 @@ class AuthorizationViewModel(private val db: AppDatabase) : ViewModel() {
         }
     }
 
+
+
     fun deleteBroker(broker: Broker) {
         viewModelScope.launch {
             brokerDao.deleteBroker(broker)
