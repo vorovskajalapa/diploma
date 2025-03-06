@@ -3,7 +3,7 @@ package com.example.iot.data.local.broker
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity(tableName = "broker")
+@Entity(tableName = "brokers")
 data class Broker(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val serverUri: String,

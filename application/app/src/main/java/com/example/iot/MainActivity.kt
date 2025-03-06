@@ -1,65 +1,54 @@
 package com.example.iot
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.iot.data.local.AppDatabase
+import com.example.iot.data.mqtt.MqttClientHelper
 import com.example.iot.ui.screens.AuthorizationScreen
 import com.example.iot.ui.screens.HomeScreen
 import com.example.iot.ui.viewmodel.AuthorizationViewModel
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.NavHostController
-import com.example.iot.data.mqtt.MqttClientHelper
+import com.example.iot.ui.viewmodel.factory.AuthorizationViewModelFactory
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
 
 class MainActivity : ComponentActivity() {
     private lateinit var mqttClientHelper: MqttClientHelper
-
-    private suspend fun connectWithTimeout(): Boolean {
-        return withTimeoutOrNull(2000) {
-            mqttClientHelper.connect() == 1
-        } ?: false
-    }
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val db = AppDatabase.getInstance(applicationContext)
-        val viewModel = AuthorizationViewModel(db)
-
         mqttClientHelper = MqttClientHelper(applicationContext)
 
+        val authorizationViewModel: AuthorizationViewModel by viewModels {
+            AuthorizationViewModelFactory(db, mqttClientHelper)
+        }
+
         lifecycleScope.launch {
-            val checkSavedInstance = viewModel.hasSavedBrokerInDb()
-            var startDestination = "auth"
+            val startDestination = authorizationViewModel.getStartDestination()
 
-            if (checkSavedInstance) {
-                if (connectWithTimeout()) {
-                    startDestination = "home";
-                }
-            }
-
-//            Log.i("devices",db.deviceDao().getDevicesByBroker(1).toString())
-
-            runOnUiThread {
-                setContent {
-                    val navController = rememberNavController()
-                    AppNavHost(navController, viewModel, startDestination)
-                }
+            setContent {
+                val navController = rememberNavController()
+                AppNavHost(navController, authorizationViewModel, db, startDestination)
             }
         }
     }
 }
 
 @Composable
-fun AppNavHost(navController: NavHostController, viewModel: AuthorizationViewModel, startDestination: String) {
+fun AppNavHost(
+    navController: NavHostController,
+    viewModel: AuthorizationViewModel,
+    db: AppDatabase,
+    startDestination: String
+) {
     NavHost(navController = navController, startDestination = startDestination) {
         composable("auth") { AuthorizationScreen(navController, viewModel) }
         composable("home") { HomeScreen() }

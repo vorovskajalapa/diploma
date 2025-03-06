@@ -7,8 +7,11 @@ interface BrokerDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(broker: Broker)
 
-    @Query("SELECT * FROM Broker")
+    @Query("SELECT * FROM brokers")
     suspend fun getAllBrokers(): List<Broker>
+
+    @Query("SELECT * FROM brokers LIMIT 1") // todo: get only last
+    suspend fun getLastBroker(): Broker
 
     @Delete
     suspend fun deleteBroker(broker: Broker)

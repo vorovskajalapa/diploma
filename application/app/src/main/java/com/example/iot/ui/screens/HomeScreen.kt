@@ -9,15 +9,24 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.iot.data.local.AppDatabase
 import com.example.iot.ui.screens.home.DevicesScreen
 import com.example.iot.ui.screens.home.RoomsScreen
 import com.example.iot.ui.screens.home.SettingsScreen
+import com.example.iot.ui.viewmodel.HomeViewModel
+import com.example.iot.ui.viewmodel.factory.HomeViewModelFactory
 
 @Composable
 fun HomeScreen() {
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("Устройства", "Комнаты", "Настройки")
+
+    val db = AppDatabase.getInstance(LocalContext.current)
+    val viewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory(db))
+
 
     Column(
         modifier = Modifier

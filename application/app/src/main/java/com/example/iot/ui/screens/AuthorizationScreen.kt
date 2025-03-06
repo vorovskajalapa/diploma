@@ -26,7 +26,8 @@ fun AuthorizationScreen(navController: NavHostController, viewModel: Authorizati
     var user by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    val brokers by viewModel.brokers.observeAsState(emptyList())
+    val brokers = viewModel.brokers.value
+
 
     val lastBroker = brokers.lastOrNull()
 

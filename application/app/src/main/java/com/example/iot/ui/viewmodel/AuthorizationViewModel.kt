@@ -1,18 +1,24 @@
 package com.example.iot.ui.viewmodel
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.State
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.iot.data.local.AppDatabase
 import com.example.iot.data.local.broker.Broker
+import com.example.iot.data.mqtt.MqttClientHelper
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
-class AuthorizationViewModel(private val db: AppDatabase) : ViewModel() {
+class AuthorizationViewModel(
+    private val db: AppDatabase,
+    private val mqttClient: MqttClientHelper
+) : ViewModel() {
+
     private val brokerDao = db.brokerDao()
 
-    private val _brokers = MutableLiveData<List<Broker>>(emptyList())
-    val brokers: LiveData<List<Broker>> = _brokers
+    private var _brokers = mutableStateOf<List<Broker>>(emptyList())
+    val brokers: State<List<Broker>> = _brokers
 
     init {
         loadBrokers()
@@ -20,12 +26,23 @@ class AuthorizationViewModel(private val db: AppDatabase) : ViewModel() {
 
     private fun loadBrokers() {
         viewModelScope.launch {
-            _brokers.postValue(brokerDao.getAllBrokers())
+            _brokers.value = brokerDao.getAllBrokers()
         }
     }
 
-    suspend fun hasSavedBrokerInDb(): Boolean {
+    private suspend fun connectWithTimeout(): Boolean {
+        return withTimeoutOrNull(2000) {
+            mqttClient.connect() == 1
+        } ?: false
+    }
+
+    private suspend fun hasSavedBrokerInDb(): Boolean {
         return brokerDao.getAllBrokers().isNotEmpty()
+    }
+
+    suspend fun getStartDestination(): String {
+        val hasSavedBroker = hasSavedBrokerInDb()
+        return if (hasSavedBroker && connectWithTimeout()) "home" else "auth"
     }
 
     fun addBroker(serverUri: String, serverPort: Int, user: String?, password: String?) {
@@ -40,8 +57,6 @@ class AuthorizationViewModel(private val db: AppDatabase) : ViewModel() {
             loadBrokers()
         }
     }
-
-
 
     fun deleteBroker(broker: Broker) {
         viewModelScope.launch {
