@@ -19,7 +19,7 @@ import com.example.iot.ui.viewmodel.factory.AuthorizationViewModelFactory
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
-    private lateinit var mqttClientHelper: MqttClientHelper
+//    private lateinit var mqttClientHelper: MqttClientHelper // change to singleton (try)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,19 +29,19 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             val lastBroker = db.brokerDao().getLastBroker()
 
-            if (lastBroker != null) {
-                mqttClientHelper = MqttClientHelper.create(applicationContext, lastBroker)
+            lastBroker.let {
+                MqttClientHelper.initialize(applicationContext, it)
             }
 
             val authorizationViewModel: AuthorizationViewModel by viewModels {
-                AuthorizationViewModelFactory(db, mqttClientHelper)
+                AuthorizationViewModelFactory(db)
             }
 
             val startDestination = authorizationViewModel.getStartDestination()
 
             setContent {
                 val navController = rememberNavController()
-                AppNavHost(navController, authorizationViewModel, mqttClientHelper, startDestination)
+                AppNavHost(navController, authorizationViewModel, startDestination)
             }
         }
     }
@@ -51,11 +51,10 @@ class MainActivity : ComponentActivity() {
 fun AppNavHost(
     navController: NavHostController,
     viewModel: AuthorizationViewModel,
-    mqttClientHelper: MqttClientHelper,
     startDestination: String
 ) {
     NavHost(navController = navController, startDestination = startDestination) {
         composable("auth") { AuthorizationScreen(navController, viewModel) }
-        composable("home") { HomeScreen(mqttClientHelper) }
+        composable("home") { HomeScreen() }
     }
 }

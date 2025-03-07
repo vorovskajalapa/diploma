@@ -13,10 +13,10 @@ import kotlinx.coroutines.withTimeoutOrNull
 
 class AuthorizationViewModel(
     private val db: AppDatabase,
-    private val mqttClientHelper: MqttClientHelper
 ) : ViewModel() {
 
     private val brokerDao = db.brokerDao()
+    private val mqttClientHelper = MqttClientHelper.getInstance()
 
     private var _brokers = mutableStateOf<List<Broker>>(emptyList())
     val brokers: State<List<Broker>> = _brokers

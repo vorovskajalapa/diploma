@@ -8,13 +8,12 @@ import com.example.iot.ui.viewmodel.AuthorizationViewModel
 
 class AuthorizationViewModelFactory(
     private val db: AppDatabase,
-    private val mqttClientHelper: MqttClientHelper
 ) : ViewModelProvider.Factory {
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(AuthorizationViewModel::class.java)) {
-            return AuthorizationViewModel(db, mqttClientHelper) as T
+            return AuthorizationViewModel(db) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

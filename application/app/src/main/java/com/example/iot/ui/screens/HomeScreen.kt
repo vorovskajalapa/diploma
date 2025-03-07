@@ -26,7 +26,7 @@ import com.example.iot.ui.viewmodel.HomeViewModel
 import com.example.iot.ui.viewmodel.factory.HomeViewModelFactory
 
 @Composable
-fun HomeScreen(mqttClientHelper: MqttClientHelper) {
+fun HomeScreen() {
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("Устройства", "Комнаты", "Настройки")
 
@@ -59,7 +59,7 @@ fun HomeScreen(mqttClientHelper: MqttClientHelper) {
         Spacer(modifier = Modifier.height(8.dp))
 
         when (selectedTab) {
-            0 -> DevicesScreen(mqttClientHelper)
+            0 -> DevicesScreen()
             1 -> RoomsScreen()
             2 -> SettingsScreen()
         }

@@ -19,9 +19,10 @@ import com.example.iot.ui.viewmodel.DeviceViewModel
 import com.example.iot.ui.viewmodel.factory.DeviceViewModelFactory
 
 @Composable
-fun DevicesScreen(mqttClientHelper: MqttClientHelper) {
+fun DevicesScreen() {
 
     val db = AppDatabase.getInstance(LocalContext.current)
+    val mqttClientHelper = MqttClientHelper.getInstance()
     val viewModel: DeviceViewModel =
         viewModel(factory = DeviceViewModelFactory(db, mqttClientHelper))
 

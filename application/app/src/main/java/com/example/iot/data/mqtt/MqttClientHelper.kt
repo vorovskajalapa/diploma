@@ -1,5 +1,6 @@
 package com.example.iot.data.mqtt
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import com.example.iot.data.local.broker.Broker
@@ -16,19 +17,32 @@ class MqttClientHelper private constructor(
 
     companion object {
         private const val CLIENT_ID_PREFIX = "AndroidClient_"
+        @Volatile private var instance: MqttClientHelper? = null
 
-        /**
-         * Создает экземпляр MqttClientHelper на основе данных брокера.
-         */
-        fun create(context: Context?, broker: Broker): MqttClientHelper {
-            return MqttClientHelper(context, broker)
+        fun getInstance(): MqttClientHelper {
+            return instance ?: throw IllegalStateException("MqttClientHelper not initialized")
+        }
+
+        fun initialize(context: Context?, broker: Broker): MqttClientHelper {
+            return instance ?: synchronized(this) {
+                instance ?: MqttClientHelper(context, broker).apply {
+                    connect()
+                }.also { instance = it }
+            }
+        }
+
+        fun reinitialize(context: Context?, broker: Broker): Boolean {
+            return synchronized(this) {
+                var connectionResult = false
+                instance?.disconnect()
+                instance = MqttClientHelper(context, broker).apply {
+                    connectionResult = connect() == 1
+                }
+                connectionResult
+            }
         }
     }
 
-    /**
-     * Подключается к брокеру MQTT.
-     * @return 1 в случае успеха, -1 в случае ошибки.
-     */
     fun connect(): Int {
         return try {
             val persistence = MemoryPersistence()
@@ -36,12 +50,9 @@ class MqttClientHelper private constructor(
             val clientId = CLIENT_ID_PREFIX + System.currentTimeMillis()
 
             mqttClient = MqttClient(brokerUri, clientId, persistence)
-
             val options = MqttConnectOptions().apply {
                 broker.user?.let { userName = it }
-
                 broker.password?.let { password = it.toCharArray() }
-
                 isCleanSession = true
                 connectionTimeout = 10
                 keepAliveInterval = 60
@@ -49,69 +60,49 @@ class MqttClientHelper private constructor(
 
             mqttClient?.setCallback(object : MqttCallback {
                 override fun connectionLost(cause: Throwable) {
-                    Log.e("MQTT", "Соединение потеряно: ${cause.message}")
+                    Log.e("MQTT", "Connection lost: ${cause.message}")
                 }
 
                 override fun messageArrived(topic: String, message: MqttMessage) {
                     val msgString = message.payload.decodeToString()
-                    Log.i("MQTT", "📩 Получено сообщение: $msgString")
+                    Log.i("MQTT", "Received message: $msgString")
                     parseAndLogDevice(msgString)
                 }
 
                 override fun deliveryComplete(token: IMqttDeliveryToken) {
-                    Log.i("MQTT", "✅ Доставка завершена")
+                    Log.i("MQTT", "Delivery complete")
                 }
             })
 
             mqttClient?.connect(options)
-            Log.i("MQTT", "✅ Подключение успешно")
-
-            // Подписка на топик по умолчанию
+            Log.i("MQTT", "Connected successfully")
             mqttClient?.subscribe("testtopic", 1)
-            Log.i("MQTT", "📡 Подписка на testtopic")
-
-            1 // Успех
+            1
         } catch (e: MqttException) {
-            e.printStackTrace()
-            Log.e("MQTT", "❌ Ошибка подключения: ${e.message} (код ${e.reasonCode})")
-            -1 // Ошибка
+            Log.e("MQTT", "Connection error: ${e.message}")
+            -1
         }
     }
 
-    /**
-     * Отправляет сообщение в указанный топик.
-     * @param topic Топик, в который отправляется сообщение.
-     * @param payload Сообщение для отправки.
-     * @param qos Уровень качества обслуживания (QoS).
-     */
     fun publishMessage(topic: String, payload: String, qos: Int = 1) {
         try {
-            val message = MqttMessage(payload.toByteArray()).apply {
-                this.qos = qos
-            }
+            val message = MqttMessage(payload.toByteArray()).apply { this.qos = qos }
             mqttClient?.publish(topic, message)
-            Log.i("MQTT", "📤 Отправлено сообщение в $topic: $payload")
+            Log.i("MQTT", "Sent to $topic: $payload")
         } catch (e: MqttException) {
-            Log.e("MQTT", "❌ Ошибка отправки сообщения: ${e.message}")
+            Log.e("MQTT", "Send error: ${e.message}")
         }
     }
 
-    /**
-     * Отключается от брокера MQTT.
-     */
     fun disconnect() {
         try {
             mqttClient?.disconnect()
-            Log.i("MQTT", "🔌 Отключено от брокера")
+            Log.i("MQTT", "Disconnected")
         } catch (e: MqttException) {
-            Log.e("MQTT", "❌ Ошибка отключения: ${e.message}")
+            Log.e("MQTT", "Disconnect error: ${e.message}")
         }
     }
 
-    /**
-     * Парсит JSON-сообщение и логирует данные устройства.
-     * @param jsonString JSON-строка, содержащая данные устройства.
-     */
     private fun parseAndLogDevice(jsonString: String) {
         try {
             val jsonObject = JSONObject(jsonString)
@@ -123,9 +114,9 @@ class MqttClientHelper private constructor(
             val modelId = deviceJson.getString("ModelId")
 
             val device = Device.create(ieeeAddr, friendlyName, modelId, null, broker.id)
-            Log.i("DEVICE", "📡 Получен девайс: $device")
+            Log.i("DEVICE", "Received device: $device")
         } catch (e: Exception) {
-            Log.e("DEVICE", "❌ Ошибка парсинга JSON: ${e.message}")
+            Log.e("DEVICE", "JSON parse error: ${e.message}")
         }
     }
 }
