@@ -36,7 +36,7 @@ class MainActivity : ComponentActivity() {
 
             setContent {
                 val navController = rememberNavController()
-                AppNavHost(navController, authorizationViewModel, db, startDestination)
+                AppNavHost(navController, authorizationViewModel, mqttClientHelper, startDestination)
             }
         }
     }
@@ -46,11 +46,11 @@ class MainActivity : ComponentActivity() {
 fun AppNavHost(
     navController: NavHostController,
     viewModel: AuthorizationViewModel,
-    db: AppDatabase,
+    mqttClientHelper: MqttClientHelper,
     startDestination: String
 ) {
     NavHost(navController = navController, startDestination = startDestination) {
         composable("auth") { AuthorizationScreen(navController, viewModel) }
-        composable("home") { HomeScreen() }
+        composable("home") { HomeScreen(mqttClientHelper) }
     }
 }

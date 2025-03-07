@@ -1,4 +1,4 @@
-package com.example.iot.di
+package com.example.iot.ui.components
 
 import android.R
 import androidx.compose.foundation.Image
@@ -17,13 +17,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun MqttDeviceCard(
+fun DeviceCard(
+    deviceId: Int,
     imageRes: Int,
     name: String,
     type: String,
     value: Any,
-    onToggle: ((Boolean) -> Unit)? = null,
-    onSliderChange: ((Float) -> Unit)? = null
+    onToggle: ((Int, Boolean) -> Unit)? = null,
+    onSliderChange: ((Int, Float) -> Unit)? = null
 ) {
     var checked by remember { mutableStateOf(value as? Boolean ?: false) }
     var sliderValue by remember { mutableFloatStateOf(value as? Float ?: 0f) }
@@ -60,7 +61,10 @@ fun MqttDeviceCard(
                             checked = checked,
                             onCheckedChange = {
                                 checked = it
-                                onToggle?.invoke(it)
+                                onToggle?.invoke(
+                                    deviceId,
+                                    it
+                                )
                             },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = Color.White,
@@ -70,12 +74,16 @@ fun MqttDeviceCard(
                             )
                         )
                     }
+
                     "slider" -> {
                         Slider(
                             value = sliderValue,
                             onValueChange = {
                                 sliderValue = it
-                                onSliderChange?.invoke(it)
+                                onSliderChange?.invoke(
+                                    deviceId,
+                                    it
+                                )
                             },
                             valueRange = 0f..100f,
                             colors = SliderDefaults.colors(
@@ -84,6 +92,7 @@ fun MqttDeviceCard(
                             )
                         )
                     }
+
                     else -> {
                         Text(text = value.toString(), fontSize = 14.sp, color = Color.Black)
                     }
@@ -97,25 +106,32 @@ fun MqttDeviceCard(
 @Composable
 fun MqttDeviceCardPreview() {
     Column {
-        MqttDeviceCard(
+        DeviceCard(
+            deviceId = 1,
             imageRes = R.drawable.ic_menu_gallery,
             name = "Smart Light",
             type = "switch",
             value = true,
-            onToggle = {}
+            onToggle = { deviceId, isChecked ->
+                println("Устройство $deviceId: $isChecked")
+            }
         )
-        MqttDeviceCard(
+        DeviceCard(
+            deviceId = 2,
             imageRes = R.drawable.ic_menu_gallery,
             name = "Temperature",
             type = "text",
             value = "22°C"
         )
-        MqttDeviceCard(
+        DeviceCard(
+            deviceId = 3,
             imageRes = R.drawable.ic_menu_gallery,
             name = "Dimmer",
             type = "slider",
             value = 50f,
-            onSliderChange = {}
+            onSliderChange = { deviceId, value ->
+                println("Устройство $deviceId: $value")
+            }
         )
     }
 }

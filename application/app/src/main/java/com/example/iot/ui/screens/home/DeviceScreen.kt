@@ -1,18 +1,49 @@
 package com.example.iot.ui.screens.home
 
-import androidx.compose.foundation.layout.Box
+import android.R
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.iot.data.local.AppDatabase
+import com.example.iot.data.mqtt.MqttClientHelper
+import com.example.iot.ui.components.DeviceCard
 import com.example.iot.ui.viewmodel.DeviceViewModel
+import com.example.iot.ui.viewmodel.factory.DeviceViewModelFactory
 
 @Composable
-fun DevicesScreen() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("Экран устройств")
+fun DevicesScreen(mqttClientHelper: MqttClientHelper) {
+
+    val db = AppDatabase.getInstance(LocalContext.current)
+    val viewModel: DeviceViewModel =
+        viewModel(factory = DeviceViewModelFactory(db, mqttClientHelper))
+
+
+    Scaffold { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp)
+        ) {
+            DeviceCard(
+                deviceId = 1,
+                imageRes = R.drawable.ic_menu_gallery,
+                name = "Smart Light",
+                type = "switch",
+                value = true,
+                onToggle = { deviceId, isChecked ->
+                    viewModel.changeSwitchDeviceState(deviceId, isChecked)
+                }
+            )
+        }
     }
 }

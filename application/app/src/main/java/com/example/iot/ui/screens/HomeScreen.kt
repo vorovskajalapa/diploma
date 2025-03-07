@@ -1,18 +1,24 @@
 package com.example.iot.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.iot.data.local.AppDatabase
+import com.example.iot.data.mqtt.MqttClientHelper
 import com.example.iot.ui.screens.home.DevicesScreen
 import com.example.iot.ui.screens.home.RoomsScreen
 import com.example.iot.ui.screens.home.SettingsScreen
@@ -20,7 +26,7 @@ import com.example.iot.ui.viewmodel.HomeViewModel
 import com.example.iot.ui.viewmodel.factory.HomeViewModelFactory
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(mqttClientHelper: MqttClientHelper) {
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("Устройства", "Комнаты", "Настройки")
 
@@ -32,7 +38,7 @@ fun HomeScreen() {
         modifier = Modifier
             .fillMaxSize()
             .statusBarsPadding()
-            .background(Color(0xFFF5F5DC))
+            .background(Color.White)
     ) {
         LazyRow(
             modifier = Modifier
@@ -53,7 +59,7 @@ fun HomeScreen() {
         Spacer(modifier = Modifier.height(8.dp))
 
         when (selectedTab) {
-            0 -> DevicesScreen()
+            0 -> DevicesScreen(mqttClientHelper)
             1 -> RoomsScreen()
             2 -> SettingsScreen()
         }
@@ -62,22 +68,33 @@ fun HomeScreen() {
 
 @Composable
 fun TabButton(title: String, isSelected: Boolean, onClick: () -> Unit) {
-    Button(
-        onClick = onClick,
-        shape = RoundedCornerShape(50.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = if (isSelected) MaterialTheme.colorScheme.primary
-            else MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-            contentColor = Color.White
-        ),
-        elevation = ButtonDefaults.elevatedButtonElevation(defaultElevation = 2.dp),
+    val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
+    val textColor = Color.Black
+    Surface(
         modifier = Modifier
-            .height(45.dp)
-            .padding(vertical = 4.dp)
+            .padding(horizontal = 4.dp, vertical = 4.dp)
+            .height(40.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .clickable { onClick() },
+        color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else Color.Transparent,
+        shape = RoundedCornerShape(8.dp),
+        border = BorderStroke(if (isSelected) 2.dp else 0.dp, borderColor)
     ) {
-        Text(title)
+        Row(
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = title,
+                color = textColor,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+            )
+        }
     }
 }
+
 
 
 

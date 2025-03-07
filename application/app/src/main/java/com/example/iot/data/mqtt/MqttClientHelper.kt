@@ -28,6 +28,19 @@ class MqttClientHelper(context: Context?) {
         }
     }
 
+    fun publishMessage(topic: String, payload: String, qos: Int = 1) {
+        try {
+            val message = MqttMessage(payload.toByteArray()).apply {
+                this.qos = qos
+            }
+            mqttClient?.publish(topic, message)
+            Log.i("MQTT", "📤 Отправлено сообщение в $topic: $payload")
+        } catch (e: MqttException) {
+            Log.e("MQTT", "❌ Ошибка отправки сообщения: ${e.message}")
+        }
+    }
+
+
     fun connect(): Int {
         try {
             val persistence = MemoryPersistence()

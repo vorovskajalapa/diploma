@@ -8,13 +8,15 @@ import com.example.iot.data.local.broker.Broker
 import com.example.iot.data.local.broker.BrokerDao
 import com.example.iot.data.local.device.Device
 import com.example.iot.data.local.device.DeviceDAO
-//import com.example.iot.data.local.deviceConfig.DeviceConfigDAO
+import com.example.iot.data.local.deviceConfig.DeviceConfig
+import com.example.iot.data.local.deviceConfig.DeviceConfigDAO
 
-@Database(entities = [Broker::class, Device::class], version = 1, exportSchema = false)
+
+@Database(entities = [Broker::class, Device::class, DeviceConfig::class], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun brokerDao(): BrokerDao
     abstract fun deviceDao(): DeviceDAO
-//    abstract fun deviceConfigDao(): DeviceConfigDAO
+    abstract fun deviceConfigDao(): DeviceConfigDAO
 
     companion object {
         @Volatile
