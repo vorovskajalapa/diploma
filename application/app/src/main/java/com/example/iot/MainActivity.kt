@@ -25,13 +25,18 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val db = AppDatabase.getInstance(applicationContext)
-        mqttClientHelper = MqttClientHelper(applicationContext)
-
-        val authorizationViewModel: AuthorizationViewModel by viewModels {
-            AuthorizationViewModelFactory(db, mqttClientHelper)
-        }
 
         lifecycleScope.launch {
+            val lastBroker = db.brokerDao().getLastBroker()
+
+            if (lastBroker != null) {
+                mqttClientHelper = MqttClientHelper.create(applicationContext, lastBroker)
+            }
+
+            val authorizationViewModel: AuthorizationViewModel by viewModels {
+                AuthorizationViewModelFactory(db, mqttClientHelper)
+            }
+
             val startDestination = authorizationViewModel.getStartDestination()
 
             setContent {

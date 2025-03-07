@@ -35,7 +35,7 @@ fun DevicesScreen(mqttClientHelper: MqttClientHelper) {
                 .padding(16.dp)
         ) {
             DeviceCard(
-                deviceId = 1,
+                deviceId = 2,
                 imageRes = R.drawable.ic_menu_gallery,
                 name = "Smart Light",
                 type = "switch",

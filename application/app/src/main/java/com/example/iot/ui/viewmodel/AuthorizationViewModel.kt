@@ -13,7 +13,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 
 class AuthorizationViewModel(
     private val db: AppDatabase,
-    private val mqttClient: MqttClientHelper
+    private val mqttClientHelper: MqttClientHelper
 ) : ViewModel() {
 
     private val brokerDao = db.brokerDao()
@@ -33,7 +33,7 @@ class AuthorizationViewModel(
 
     private suspend fun connectWithTimeout(): Boolean {
         return withTimeoutOrNull(2000) {
-            mqttClient.connect() == 1
+            mqttClientHelper.connect() == 1
         } ?: false
     }
 
