@@ -1,8 +1,9 @@
 package com.example.iot.ui.screens.home
 
-import android.R
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -12,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.iot.R
 import com.example.iot.data.local.AppDatabase
 import com.example.iot.data.mqtt.MqttClientHelper
 import com.example.iot.ui.components.DeviceCard
@@ -23,8 +25,9 @@ fun DevicesScreen() {
 
     val db = AppDatabase.getInstance(LocalContext.current)
     val mqttClientHelper = MqttClientHelper.getInstance()
-    val viewModel: DeviceViewModel =
+    val deviceViewModel: DeviceViewModel =
         viewModel(factory = DeviceViewModelFactory(db, mqttClientHelper))
+
 
 
     Scaffold { paddingValues ->
@@ -35,16 +38,19 @@ fun DevicesScreen() {
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
-            DeviceCard(
-                deviceId = 2,
-                imageRes = R.drawable.ic_menu_gallery,
-                name = "Smart Light",
-                type = "switch",
-                value = true,
-                onToggle = { deviceId, isChecked ->
-                    viewModel.changeSwitchDeviceState(deviceId, isChecked)
-                }
-            )
+            deviceViewModel.devices.value.forEach { device ->
+                DeviceCard(
+                    deviceId = device.id,
+                    imageRes = R.drawable.mqtt_logo,
+                    name = device.friendlyName,
+                    type = "switch",
+                    value = false,
+                    onToggle = { deviceId, isChecked ->
+                        deviceViewModel.changeSwitchDeviceState(deviceId, isChecked)
+                    }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
         }
     }
 }
