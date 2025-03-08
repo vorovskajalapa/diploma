@@ -14,7 +14,7 @@ interface BrokerDao {
     @Query("SELECT * FROM brokers")
     suspend fun getAllBrokers(): List<Broker>
 
-    @Query("SELECT * FROM brokers LIMIT 1") // todo: get only last
+    @Query("SELECT * FROM brokers ORDER BY id DESC LIMIT 1")
     suspend fun getLastBroker(): Broker
 
     @Delete
