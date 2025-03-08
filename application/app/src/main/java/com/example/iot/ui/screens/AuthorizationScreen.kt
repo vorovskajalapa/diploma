@@ -1,12 +1,10 @@
 package com.example.iot.ui.screens
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -16,20 +14,27 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.iot.R
+import com.example.iot.data.local.AppDatabase
 import com.example.iot.data.local.broker.Broker
 import com.example.iot.data.mqtt.MqttClientHelper
 import com.example.iot.ui.viewmodel.AuthorizationViewModel
+import com.example.iot.ui.viewmodel.factory.AuthorizationViewModelFactory
 
 @Composable
-fun AuthorizationScreen(navController: NavHostController, viewModel: AuthorizationViewModel) {
+fun AuthorizationScreen(navController: NavHostController) {
     var serverUri by remember { mutableStateOf("") }
     var serverPort by remember { mutableStateOf("") }
     var user by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    val brokers = viewModel.brokers.value
+
+    val db = AppDatabase.getInstance(LocalContext.current)
+    val authorizationViewModel: AuthorizationViewModel = viewModel(factory = (AuthorizationViewModelFactory(db)))
+
+    val brokers = authorizationViewModel.brokers.value
 
 
     val lastBroker = brokers.lastOrNull()
@@ -99,7 +104,7 @@ fun AuthorizationScreen(navController: NavHostController, viewModel: Authorizati
             Button(
                 onClick = {
                     if (serverUri.isNotBlank() && serverPort.isNotBlank()) {
-                        viewModel.addBroker(
+                        authorizationViewModel.addBroker(
                             serverUri,
                             serverPort.toIntOrNull() ?: 1883,
                             user.takeIf { it.isNotBlank() },
@@ -128,7 +133,7 @@ fun AuthorizationScreen(navController: NavHostController, viewModel: Authorizati
 
             BrokerItem(
                 broker,
-                onDelete = { viewModel.deleteBroker(broker) },
+                onDelete = { authorizationViewModel.deleteBroker(broker) },
                 onLogin = {
                     val isSuccess = MqttClientHelper.reinitialize(context = null, broker)
                     if (isSuccess) {

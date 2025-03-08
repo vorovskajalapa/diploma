@@ -1,6 +1,7 @@
 package com.example.iot
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -19,7 +20,6 @@ import com.example.iot.ui.viewmodel.factory.AuthorizationViewModelFactory
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
-//    private lateinit var mqttClientHelper: MqttClientHelper // change to singleton (try)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,7 +41,7 @@ class MainActivity : ComponentActivity() {
 
             setContent {
                 val navController = rememberNavController()
-                AppNavHost(navController, authorizationViewModel, startDestination)
+                AppNavHost(navController, startDestination)
             }
         }
     }
@@ -50,11 +50,10 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavHost(
     navController: NavHostController,
-    viewModel: AuthorizationViewModel,
     startDestination: String
 ) {
     NavHost(navController = navController, startDestination = startDestination) {
-        composable("auth") { AuthorizationScreen(navController, viewModel) }
+        composable("auth") { AuthorizationScreen(navController) }
         composable("home") { HomeScreen() }
     }
 }
