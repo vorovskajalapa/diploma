@@ -5,6 +5,7 @@ import android.util.Log
 import com.example.iot.data.local.broker.Broker
 import com.example.iot.data.local.device.Device
 import com.example.iot.data.local.device.DeviceRepository
+import com.example.iot.utils.Constants
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
@@ -23,8 +24,8 @@ class MqttClientHelper private constructor(
     private val coroutineScope: CoroutineScope
 ) {
     private var mqttClient: MqttClient? = null
-    private var isSubscribed = false // Флаг для контроля подписки
-    private var isCallbackSet = false // Флаг для контроля обработчика сообщений
+    private var isSubscribeDeviceTopic = false
+    private var isCallbackSet = false
 
     companion object {
         private const val CLIENT_ID_PREFIX = "AndroidClient_"
@@ -75,13 +76,11 @@ class MqttClientHelper private constructor(
 
     fun connect(): Int {
         return try {
-            // Проверяем, подключен ли клиент
             if (mqttClient?.isConnected == true) {
                 Log.i("MQTT", "Already connected")
                 return 1
             }
 
-            // Создаем клиента, если он еще не создан
             if (mqttClient == null) {
                 val persistence = MemoryPersistence()
                 val brokerUri = "tcp://${broker.serverUri}:${broker.serverPort}"
@@ -89,7 +88,6 @@ class MqttClientHelper private constructor(
                 mqttClient = MqttClient(brokerUri, clientId, persistence)
             }
 
-            // Настройки подключения
             val options = MqttConnectOptions().apply {
                 broker.user?.let { userName = it }
                 broker.password?.let { password = it.toCharArray() }
@@ -98,7 +96,6 @@ class MqttClientHelper private constructor(
                 keepAliveInterval = 60
             }
 
-            // Устанавливаем обработчик сообщений (только один раз)
             if (!isCallbackSet) {
                 mqttClient?.setCallback(object : MqttCallback {
                     override fun connectionLost(cause: Throwable) {
@@ -119,21 +116,19 @@ class MqttClientHelper private constructor(
                 Log.i("MQTT", "Callback set")
             }
 
-            // Подключаемся к брокеру
             mqttClient?.connect(options)
             Log.i("MQTT", "Connected successfully")
 
-            // Подписываемся на топик (только один раз)
-            if (!isSubscribed) {
-                mqttClient?.subscribe("testtopic", 0)
-                isSubscribed = true
+            if (!isSubscribeDeviceTopic) {
+                mqttClient?.subscribe(Constants.DEVICES_TOPIC, 0)
+                isSubscribeDeviceTopic = true
                 Log.i("MQTT", "Subscribed to testtopic")
             }
 
-            1 // Успех
+            1
         } catch (e: MqttException) {
             Log.e("MQTT", "Connection error: ${e.message}")
-            -1 // Ошибка
+            -1
         }
     }
 
@@ -151,8 +146,8 @@ class MqttClientHelper private constructor(
         try {
             mqttClient?.disconnect()
             Log.i("MQTT", "Disconnected")
-            isSubscribed = false // Сбрасываем флаг подписки
-            isCallbackSet = false // Сбрасываем флаг обработчика
+            isSubscribeDeviceTopic = false
+            isCallbackSet = false
         } catch (e: MqttException) {
             Log.e("MQTT", "Disconnect error: ${e.message}")
         }

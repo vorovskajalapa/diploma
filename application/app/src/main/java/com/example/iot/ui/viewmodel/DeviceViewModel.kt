@@ -41,10 +41,9 @@ class DeviceViewModel(db: AppDatabase, private val mqttClientHelper: MqttClientH
     fun changeSwitchDeviceState(devId: Int, state: Boolean) {
         viewModelScope.launch {
             val device = deviceDao.getDeviceById(devId)
-            val field = deviceConfigDAO.getSwitchFieldByModelId(device.modelId).field
+            val field = deviceConfigDAO.getSwitchFieldByModelId(device.modelId)?.field
 
             val formatTopic = device.topic + "/" + "set" + "/" + field
-//            val formatTopic = "zigbee/0xA4C138DEB58ECDEC/set/state" // hardcoded
             val newState = if (state) "ON" else "OFF"
             mqttClientHelper.publishMessage(formatTopic, newState)
         }
