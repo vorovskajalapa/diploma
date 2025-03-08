@@ -1,10 +1,9 @@
 package com.example.iot.ui.viewmodel
 
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.iot.data.local.AppDatabase
 import com.example.iot.data.local.device.Device
 import com.example.iot.data.mqtt.MqttClientHelper
