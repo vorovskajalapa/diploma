@@ -4,6 +4,9 @@ import android.content.Context
 import android.util.Log
 import com.example.iot.data.local.broker.Broker
 import com.example.iot.data.local.device.Device
+import com.example.iot.data.local.device.DeviceRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
 import org.eclipse.paho.client.mqttv3.MqttCallback
 import org.eclipse.paho.client.mqttv3.MqttClient
@@ -15,34 +18,54 @@ import org.json.JSONObject
 
 class MqttClientHelper private constructor(
     private val context: Context?,
-    private val broker: Broker
+    private val broker: Broker,
+    private val deviceRepository: DeviceRepository,
+    private val coroutineScope: CoroutineScope
 ) {
     private var mqttClient: MqttClient? = null
 
     companion object {
         private const val CLIENT_ID_PREFIX = "AndroidClient_"
-        @Volatile private var instance: MqttClientHelper? = null
+
+        @Volatile
+        private var instance: MqttClientHelper? = null
 
         fun getInstance(): MqttClientHelper {
             return instance ?: throw IllegalStateException("MqttClientHelper not initialized")
         }
 
-        fun initialize(context: Context?, broker: Broker): MqttClientHelper {
+        fun initialize(
+            context: Context?,
+            broker: Broker,
+            deviceRepository: DeviceRepository,
+            coroutineScope: CoroutineScope
+        ): MqttClientHelper {
             return instance ?: synchronized(this) {
-                instance ?: MqttClientHelper(context, broker).apply {
+                instance ?: MqttClientHelper(context, broker, deviceRepository, coroutineScope).apply {
                     connect()
                 }.also { instance = it }
             }
         }
 
-        fun reinitialize(context: Context?, broker: Broker): Boolean {
+        fun reinitialize(
+            context: Context?,
+            broker: Broker
+        ): Boolean {
             return synchronized(this) {
-                var connectionResult = false
-                instance?.disconnect()
-                instance = MqttClientHelper(context, broker).apply {
-                    connectionResult = connect() == 1
+                val currentInstance = instance
+                if (currentInstance != null) {
+                    val deviceRepository = currentInstance.deviceRepository
+                    val coroutineScope = currentInstance.coroutineScope
+
+                    currentInstance.disconnect()
+
+                    instance = MqttClientHelper(context, broker, deviceRepository, coroutineScope).apply {
+                        connect()
+                    }
+                    true
+                } else {
+                    false
                 }
-                connectionResult
             }
         }
     }
@@ -110,15 +133,51 @@ class MqttClientHelper private constructor(
     private fun parseAndLogDevice(jsonString: String) {
         try {
             val jsonObject = JSONObject(jsonString)
+
+            if (!jsonObject.keys().hasNext()) {
+                Log.w("DEVICE", "Empty JSON object received")
+                return
+            }
+
             val key = jsonObject.keys().next()
-            val deviceJson = jsonObject.getJSONObject(key)
+            val deviceJson = jsonObject.optJSONObject(key) ?: run {
+                Log.w("DEVICE", "Expected a JSON object for key: $key")
+                return
+            }
 
-            val ieeeAddr = deviceJson.getString("ieeeAddr")
-            val friendlyName = deviceJson.getString("friendly_name")
-            val modelId = deviceJson.getString("ModelId")
+            val ieeeAddr = deviceJson.optString("ieeeAddr") ?: run {
+                Log.w("DEVICE", "Missing 'ieeeAddr' field in device data")
+                return
+            }
+            val friendlyName = deviceJson.optString("friendly_name") ?: run {
+                Log.w("DEVICE", "Missing 'friendly_name' field in device data")
+                return
+            }
+            val modelId = deviceJson.optString("ModelId") ?: run {
+                Log.w("DEVICE", "Missing 'ModelId' field in device data")
+                return
+            }
 
-            val device = Device.create(ieeeAddr, friendlyName, modelId, null, broker.id)
+            // Создаем объект устройства
+            val device = Device.create(
+                ieeeAddr = ieeeAddr,
+                friendlyName = friendlyName,
+                modelId = modelId,
+                roomId = null,
+                brokerId = broker.id
+            )
+
             Log.i("DEVICE", "Received device: $device")
+
+            coroutineScope.launch {
+                val isAdded = deviceRepository.addDeviceIfNotExists(device)
+                if (isAdded) {
+                    Log.i("DEVICE", "Device added: $device")
+                } else {
+                    Log.i("DEVICE", "Device already exists: $device")
+                }
+            }
+
         } catch (e: Exception) {
             Log.e("DEVICE", "JSON parse error: ${e.message}")
         }

@@ -11,6 +11,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.iot.data.local.AppDatabase
+import com.example.iot.data.local.device.DeviceRepository
 import com.example.iot.data.mqtt.MqttClientHelper
 import com.example.iot.ui.screens.AuthorizationScreen
 import com.example.iot.ui.screens.HomeScreen
@@ -24,12 +25,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val db = AppDatabase.getInstance(applicationContext)
+        val deviceRepository = DeviceRepository(db.deviceDao())
 
         lifecycleScope.launch {
             val lastBroker = db.brokerDao().getLastBroker()
 
             lastBroker.let {
-                MqttClientHelper.initialize(applicationContext, it)
+                MqttClientHelper.initialize(applicationContext, it, deviceRepository, lifecycleScope)
             }
 
             val authorizationViewModel: AuthorizationViewModel by viewModels {

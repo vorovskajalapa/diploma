@@ -155,7 +155,7 @@ fun AuthorizationScreen(navController: NavHostController) {
                 broker,
                 onDelete = { authorizationViewModel.deleteBroker(broker) },
                 onLogin = {
-                    val isSuccess = MqttClientHelper.reinitialize(context = null, broker)
+                    val isSuccess = MqttClientHelper.reinitialize(null, broker)
                     if (isSuccess) {
                         navController.navigate("home")
                     }

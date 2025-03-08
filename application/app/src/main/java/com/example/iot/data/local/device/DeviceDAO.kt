@@ -21,4 +21,7 @@ interface DeviceDAO {
 
     @Query("SELECT * FROM devices WHERE id = :deviceId LIMIT 1")
     suspend fun getDeviceById(deviceId: Int): Device // ? был тут
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertDevice(device: Device): Long
 }
