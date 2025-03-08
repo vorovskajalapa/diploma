@@ -21,7 +21,12 @@ class DeviceViewModel(db: AppDatabase, private val mqttClientHelper: MqttClientH
     private fun loadDevices() {
         viewModelScope.launch {
             val broker = brokerDao.getLastBroker()
-            _devices.value = deviceDao.getDevicesByBroker(broker.id)
+            if (broker != null) {
+                deviceDao.getDevicesByBrokerFlow(broker.id)
+                    .collect { deviceList ->
+                        _devices.value = deviceList
+                    }
+            }
         }
     }
 

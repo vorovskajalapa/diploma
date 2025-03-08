@@ -11,6 +11,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.iot.data.local.AppDatabase
+import com.example.iot.data.local.broker.Broker
 import com.example.iot.data.local.device.DeviceRepository
 import com.example.iot.data.mqtt.MqttClientHelper
 import com.example.iot.ui.screens.AuthorizationScreen
@@ -28,7 +29,11 @@ class MainActivity : ComponentActivity() {
         val deviceRepository = DeviceRepository(db.deviceDao())
 
         lifecycleScope.launch {
-            val lastBroker = db.brokerDao().getLastBroker()
+            var lastBroker = db.brokerDao().getLastBroker()
+
+            if (lastBroker == null) {
+                lastBroker = Broker(0, "1", 1, null, null)
+            }
 
             lastBroker.let {
                 MqttClientHelper.initialize(applicationContext, it, deviceRepository, lifecycleScope)
