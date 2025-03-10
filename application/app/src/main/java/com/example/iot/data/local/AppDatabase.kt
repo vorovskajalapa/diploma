@@ -9,6 +9,8 @@ import com.example.iot.data.local.broker.Broker
 import com.example.iot.data.local.broker.BrokerDao
 import com.example.iot.data.local.device.Device
 import com.example.iot.data.local.device.DeviceDAO
+import com.example.iot.data.local.device.state.DeviceState
+import com.example.iot.data.local.device.state.DeviceStateDAO
 import com.example.iot.data.local.deviceConfig.DeviceConfig
 import com.example.iot.data.local.deviceConfig.DeviceConfigDAO
 import com.example.iot.data.local.deviceConfig.ParameterType
@@ -18,7 +20,7 @@ import kotlinx.coroutines.launch
 
 
 @Database(
-    entities = [Broker::class, Device::class, DeviceConfig::class],
+    entities = [Broker::class, Device::class, DeviceConfig::class, DeviceState::class],
     version = 1,
     exportSchema = false
 )
@@ -26,6 +28,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun brokerDao(): BrokerDao
     abstract fun deviceDao(): DeviceDAO
     abstract fun deviceConfigDao(): DeviceConfigDAO
+    abstract fun deviceStateDao(): DeviceStateDAO
 
     companion object {
         @Volatile
@@ -46,7 +49,7 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "app_database"
-                ).addCallback(object : RoomDatabase.Callback() {
+                ).addCallback(object : Callback() {
                     override fun onCreate(db: SupportSQLiteDatabase) {
                         super.onCreate(db)
                         CoroutineScope(Dispatchers.IO).launch {

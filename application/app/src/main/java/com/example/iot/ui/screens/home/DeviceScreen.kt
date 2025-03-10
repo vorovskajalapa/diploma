@@ -30,6 +30,9 @@ fun DevicesScreen(navHostController: NavHostController) {
         viewModel(factory = DeviceViewModelFactory(db, mqttClientHelper))
 
 
+    // 1) get all devices by devices view model
+    // 2) get config from db (persistent)
+    // 3) cycle check if exist in config -> slider/text/switch
 
     Scaffold { paddingValues ->
         Column(

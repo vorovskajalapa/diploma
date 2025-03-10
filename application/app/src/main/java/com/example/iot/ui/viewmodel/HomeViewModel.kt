@@ -4,6 +4,4 @@ import androidx.lifecycle.ViewModel
 import com.example.iot.data.local.AppDatabase
 
 
-class HomeViewModel(db: AppDatabase) : ViewModel() {
-
-}
+class HomeViewModel(db: AppDatabase) : ViewModel()

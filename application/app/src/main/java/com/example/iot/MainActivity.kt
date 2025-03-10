@@ -42,7 +42,8 @@ class MainActivity : ComponentActivity() {
                     applicationContext,
                     it,
                     deviceRepository,
-                    lifecycleScope
+                    lifecycleScope,
+                    db
                 )
             }
 
