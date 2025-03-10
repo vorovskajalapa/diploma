@@ -25,7 +25,13 @@ data class Device(
     val brokerId: Int
 ) {
     companion object {
-        fun create(ieeeAddr: String, friendlyName: String, modelId: String, roomId: Long?, brokerId: Int): Device {
+        fun create(
+            ieeeAddr: String,
+            friendlyName: String,
+            modelId: String,
+            roomId: Long?,
+            brokerId: Int
+        ): Device {
             val topic = "zigbee/0x$ieeeAddr"
             return Device(
                 ieeeAddr = "0x$ieeeAddr",

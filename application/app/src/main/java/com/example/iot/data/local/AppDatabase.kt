@@ -17,7 +17,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 
-@Database(entities = [Broker::class, Device::class, DeviceConfig::class], version = 1, exportSchema = false)
+@Database(
+    entities = [Broker::class, Device::class, DeviceConfig::class],
+    version = 1,
+    exportSchema = false
+)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun brokerDao(): BrokerDao
     abstract fun deviceDao(): DeviceDAO

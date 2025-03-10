@@ -1,7 +1,6 @@
 package com.example.iot
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -39,7 +38,12 @@ class MainActivity : ComponentActivity() {
             }
 
             lastBroker.let {
-                MqttClientHelper.initialize(applicationContext, it, deviceRepository, lifecycleScope)
+                MqttClientHelper.initialize(
+                    applicationContext,
+                    it,
+                    deviceRepository,
+                    lifecycleScope
+                )
             }
 
             val authorizationViewModel: AuthorizationViewModel by viewModels {

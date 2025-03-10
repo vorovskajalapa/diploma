@@ -44,7 +44,12 @@ class MqttClientHelper private constructor(
             coroutineScope: CoroutineScope
         ): MqttClientHelper {
             return instance ?: synchronized(this) {
-                instance ?: MqttClientHelper(context, broker, deviceRepository, coroutineScope).apply {
+                instance ?: MqttClientHelper(
+                    context,
+                    broker,
+                    deviceRepository,
+                    coroutineScope
+                ).apply {
                     connect()
                 }.also { instance = it }
             }
@@ -63,9 +68,10 @@ class MqttClientHelper private constructor(
                     currentInstance.disconnect()
                     instance?.disconnect()
 
-                    instance = MqttClientHelper(context, broker, deviceRepository, coroutineScope).apply {
-                        connect()
-                    }
+                    instance =
+                        MqttClientHelper(context, broker, deviceRepository, coroutineScope).apply {
+                            connect()
+                        }
                     true
                 } else {
                     false

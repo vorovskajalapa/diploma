@@ -52,7 +52,8 @@ fun AuthorizationScreen(navController: NavHostController) {
 
 
     val db = AppDatabase.getInstance(LocalContext.current)
-    val authorizationViewModel: AuthorizationViewModel = viewModel(factory = (AuthorizationViewModelFactory(db)))
+    val authorizationViewModel: AuthorizationViewModel =
+        viewModel(factory = (AuthorizationViewModelFactory(db)))
 
     val brokers = authorizationViewModel.brokers.value
 

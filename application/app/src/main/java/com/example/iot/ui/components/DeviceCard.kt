@@ -1,7 +1,7 @@
 package com.example.iot.ui.components
 
-import android.R
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -29,11 +29,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-import androidx.compose.foundation.clickable
 import androidx.navigation.NavHostController
 
 @Composable
@@ -43,7 +40,7 @@ fun DeviceCard(
     name: String,
     type: String,
     value: Any,
-    navController: NavHostController, // Добавляем NavController
+    navController: NavHostController,
     onToggle: ((Int, Boolean) -> Unit)? = null,
     onSliderChange: ((Int, Float) -> Unit)? = null
 ) {
@@ -57,7 +54,7 @@ fun DeviceCard(
             .padding(8.dp)
             .clickable {
                 navController.navigate("device_details/$deviceId")
-            }, // Добавляем клик для навигации
+            },
         elevation = CardDefaults.cardElevation(6.dp)
     ) {
         Row(
@@ -95,6 +92,7 @@ fun DeviceCard(
                             )
                         )
                     }
+
                     "slider" -> {
                         Slider(
                             value = sliderValue,
@@ -109,6 +107,7 @@ fun DeviceCard(
                             )
                         )
                     }
+
                     else -> {
                         Text(text = value.toString(), fontSize = 14.sp, color = Color.Black)
                     }
