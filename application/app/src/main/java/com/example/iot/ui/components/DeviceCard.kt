@@ -33,6 +33,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+import androidx.compose.foundation.clickable
+import androidx.navigation.NavHostController
+
 @Composable
 fun DeviceCard(
     deviceId: Int,
@@ -40,6 +43,7 @@ fun DeviceCard(
     name: String,
     type: String,
     value: Any,
+    navController: NavHostController, // Добавляем NavController
     onToggle: ((Int, Boolean) -> Unit)? = null,
     onSliderChange: ((Int, Float) -> Unit)? = null
 ) {
@@ -50,7 +54,10 @@ fun DeviceCard(
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp),
+            .padding(8.dp)
+            .clickable {
+                navController.navigate("device_details/$deviceId")
+            }, // Добавляем клик для навигации
         elevation = CardDefaults.cardElevation(6.dp)
     ) {
         Row(
@@ -78,10 +85,7 @@ fun DeviceCard(
                             checked = checked,
                             onCheckedChange = {
                                 checked = it
-                                onToggle?.invoke(
-                                    deviceId,
-                                    it
-                                )
+                                onToggle?.invoke(deviceId, it)
                             },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = Color.White,
@@ -91,16 +95,12 @@ fun DeviceCard(
                             )
                         )
                     }
-
                     "slider" -> {
                         Slider(
                             value = sliderValue,
                             onValueChange = {
                                 sliderValue = it
-                                onSliderChange?.invoke(
-                                    deviceId,
-                                    it
-                                )
+                                onSliderChange?.invoke(deviceId, it)
                             },
                             valueRange = 0f..100f,
                             colors = SliderDefaults.colors(
@@ -109,7 +109,6 @@ fun DeviceCard(
                             )
                         )
                     }
-
                     else -> {
                         Text(text = value.toString(), fontSize = 14.sp, color = Color.Black)
                     }
@@ -119,36 +118,37 @@ fun DeviceCard(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun MqttDeviceCardPreview() {
-    Column {
-        DeviceCard(
-            deviceId = 1,
-            imageRes = R.drawable.ic_menu_gallery,
-            name = "Smart Light",
-            type = "switch",
-            value = true,
-            onToggle = { deviceId, isChecked ->
-                println("Устройство $deviceId: $isChecked")
-            }
-        )
-        DeviceCard(
-            deviceId = 2,
-            imageRes = R.drawable.ic_menu_gallery,
-            name = "Temperature",
-            type = "text",
-            value = "22°C"
-        )
-        DeviceCard(
-            deviceId = 3,
-            imageRes = R.drawable.ic_menu_gallery,
-            name = "Dimmer",
-            type = "slider",
-            value = 50f,
-            onSliderChange = { deviceId, value ->
-                println("Устройство $deviceId: $value")
-            }
-        )
-    }
-}
+
+//@Preview(showBackground = true)
+//@Composable
+//fun MqttDeviceCardPreview() {
+//    Column {
+//        DeviceCard(
+//            deviceId = 1,
+//            imageRes = R.drawable.ic_menu_gallery,
+//            name = "Smart Light",
+//            type = "switch",
+//            value = true,
+//            onToggle = { deviceId, isChecked ->
+//                println("Устройство $deviceId: $isChecked")
+//            }
+//        )
+//        DeviceCard(
+//            deviceId = 2,
+//            imageRes = R.drawable.ic_menu_gallery,
+//            name = "Temperature",
+//            type = "text",
+//            value = "22°C"
+//        )
+//        DeviceCard(
+//            deviceId = 3,
+//            imageRes = R.drawable.ic_menu_gallery,
+//            name = "Dimmer",
+//            type = "slider",
+//            value = 50f,
+//            onSliderChange = { deviceId, value ->
+//                println("Устройство $deviceId: $value")
+//            }
+//        )
+//    }
+//}

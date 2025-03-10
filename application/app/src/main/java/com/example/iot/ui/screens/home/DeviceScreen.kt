@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.example.iot.R
 import com.example.iot.data.local.AppDatabase
 import com.example.iot.data.mqtt.MqttClientHelper
@@ -21,7 +22,7 @@ import com.example.iot.ui.viewmodel.DeviceViewModel
 import com.example.iot.ui.viewmodel.factory.DeviceViewModelFactory
 
 @Composable
-fun DevicesScreen() {
+fun DevicesScreen(navHostController: NavHostController) {
 
     val db = AppDatabase.getInstance(LocalContext.current)
     val mqttClientHelper = MqttClientHelper.getInstance()
@@ -45,6 +46,7 @@ fun DevicesScreen() {
                     name = device.friendlyName,
                     type = "switch",
                     value = false,
+                    navController = navHostController,
                     onToggle = { deviceId, isChecked ->
                         deviceViewModel.changeSwitchDeviceState(deviceId, isChecked)
                     }

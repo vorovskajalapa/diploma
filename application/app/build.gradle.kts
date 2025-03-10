@@ -74,7 +74,7 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.5")
 
 
-        implementation("org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5")
-        implementation("org.eclipse.paho:org.eclipse.paho.android.service:1.1.1")
+    implementation("org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5")
+    implementation("org.eclipse.paho:org.eclipse.paho.android.service:1.1.1")
 
 }

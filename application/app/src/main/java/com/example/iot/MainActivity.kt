@@ -1,6 +1,7 @@
 package com.example.iot
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -16,6 +17,7 @@ import com.example.iot.data.local.device.DeviceRepository
 import com.example.iot.data.mqtt.MqttClientHelper
 import com.example.iot.ui.screens.AuthorizationScreen
 import com.example.iot.ui.screens.HomeScreen
+import com.example.iot.ui.screens.home.device.DeviceDetailScreen
 import com.example.iot.ui.viewmodel.AuthorizationViewModel
 import com.example.iot.ui.viewmodel.factory.AuthorizationViewModelFactory
 import kotlinx.coroutines.launch
@@ -30,6 +32,7 @@ class MainActivity : ComponentActivity() {
 
         lifecycleScope.launch {
             var lastBroker = db.brokerDao().getLastBroker()
+
 
             if (lastBroker == null) {
                 lastBroker = Broker(0, "1", 1, null, null)
@@ -60,6 +63,9 @@ fun AppNavHost(
 ) {
     NavHost(navController = navController, startDestination = startDestination) {
         composable("auth") { AuthorizationScreen(navController) }
-        composable("home") { HomeScreen() }
+        composable("home") { HomeScreen(navController) }
+        composable("device_details/{deviceId}") { backStackEntry ->
+            DeviceDetailScreen(backStackEntry)
+        }
     }
 }

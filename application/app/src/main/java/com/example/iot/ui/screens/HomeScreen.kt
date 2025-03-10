@@ -32,6 +32,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.example.iot.data.local.AppDatabase
 import com.example.iot.ui.screens.home.DevicesScreen
 import com.example.iot.ui.screens.home.RoomsScreen
@@ -40,7 +41,7 @@ import com.example.iot.ui.viewmodel.HomeViewModel
 import com.example.iot.ui.viewmodel.factory.HomeViewModelFactory
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(navHostController: NavHostController) {
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("Устройства", "Комнаты", "Настройки")
 
@@ -73,7 +74,7 @@ fun HomeScreen() {
         Spacer(modifier = Modifier.height(8.dp))
 
         when (selectedTab) {
-            0 -> DevicesScreen()
+            0 -> DevicesScreen(navHostController)
             1 -> RoomsScreen()
             2 -> SettingsScreen()
         }
