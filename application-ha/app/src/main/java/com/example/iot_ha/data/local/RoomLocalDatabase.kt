@@ -4,16 +4,20 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import com.example.iot_ha.data.local.broker.Broker
-import com.example.iot_ha.data.local.broker.BrokerDao
+import com.example.iot_ha.data.local.broker.BrokerDAO
+import com.example.iot_ha.data.local.command.Command
+import com.example.iot_ha.data.local.device.Device
 
 @Database(
-    entities = [Broker::class],
+    entities = [Broker::class, Device::class, Command::class],
     version = 1,
     exportSchema = false
 )
+@TypeConverters(MapTypeConvertor::class)
 abstract class RoomLocalDatabase : RoomDatabase() {
-    abstract fun brokerDAO(): BrokerDao
+    abstract fun brokerDAO(): BrokerDAO
 
     companion object {
         @Volatile

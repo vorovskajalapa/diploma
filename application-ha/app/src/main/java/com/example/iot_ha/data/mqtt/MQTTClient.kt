@@ -72,6 +72,19 @@ object MQTTClient {
         }
     }
 
+    fun publish(topic: String, payload: String, qos: Int = 1, retained: Boolean = false) {
+        try {
+            val message = MqttMessage(payload.toByteArray()).apply {
+                this.qos = qos
+                this.isRetained = retained
+            }
+            mqttClient?.publish(topic, message)
+            Log.i("MQTT", "📤 Отправлено сообщение: $payload в топик: $topic")
+        } catch (e: MqttException) {
+            Log.e("MQTT", "Ошибка отправки сообщения: ${e.reasonCode} - ${e.message}")
+        }
+    }
+
     private fun disconnect() {
         try {
             mqttClient?.disconnect()

@@ -1,6 +1,7 @@
 package com.example.iot_ha
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
@@ -8,8 +9,11 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.iot_ha.data.local.broker.Broker
+import com.example.iot_ha.data.mqtt.MQTTClient
 import com.example.iot_ha.ui.screens.AuthorizationScreen
 import com.example.iot_ha.ui.screens.HomeScreen
+import com.example.iot_ha.ui.screens.home.devices.DeviceDetailScreen
 
 class MainActivity : ComponentActivity() {
 //    private val broker = Broker(
@@ -18,7 +22,8 @@ class MainActivity : ComponentActivity() {
 //        user = "yahor1",
 //        password = "yahor1"
 //    )
-//
+
+
 //    private val mqttClient = MQTTClient.initialize(broker)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,6 +48,10 @@ fun AppNavHost(
     NavHost(navController = navController, startDestination = startDestination) {
         composable("auth") { AuthorizationScreen(navHostController = navController) }
         composable("home") { HomeScreen(navHostController = navController) }
+
+        composable("device_details/{deviceId}") { backStackEntry ->
+            DeviceDetailScreen(backStackEntry)
+        }
     }
 }
 

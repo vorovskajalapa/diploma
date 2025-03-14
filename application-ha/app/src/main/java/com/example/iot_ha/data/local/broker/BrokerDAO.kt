@@ -7,7 +7,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 
 @Dao
-interface BrokerDao {
+interface BrokerDAO {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(broker: Broker)
 
