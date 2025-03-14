@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.iot_ha.R
 import com.example.iot_ha.data.local.device.DeviceState
-import com.example.iot_ha.ui.components.DeviceCard
+import com.example.iot_ha.ui.components.devices.DeviceCard
 import com.example.iot_ha.ui.viewmodels.shared.DevicesViewModel
 import com.example.iot_ha.utils.Constants
 import com.example.iot_ha.utils.toBooleanState

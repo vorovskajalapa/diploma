@@ -1,4 +1,4 @@
-package com.example.iot_ha.ui.components
+package com.example.iot_ha.ui.components.devices
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable

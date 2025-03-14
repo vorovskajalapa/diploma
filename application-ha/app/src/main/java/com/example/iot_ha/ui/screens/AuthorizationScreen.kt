@@ -1,25 +1,14 @@
 package com.example.iot_ha.ui.screens
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,11 +17,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -42,6 +28,8 @@ import com.example.iot_ha.data.local.broker.Broker
 import com.example.iot_ha.data.local.broker.BrokerState
 import com.example.iot_ha.data.mqtt.MQTTClient
 import com.example.iot_ha.data.mqtt.MQTTMessageHandler
+import com.example.iot_ha.ui.components.broker.BrokerInputForm
+import com.example.iot_ha.ui.components.broker.BrokerList
 import com.example.iot_ha.ui.viewmodels.AuthorizationViewModel
 import com.example.iot_ha.ui.viewmodels.factory.AuthorizationViewModelFactory
 import com.example.iot_ha.ui.viewmodels.shared.DevicesViewModel
@@ -69,9 +57,6 @@ fun AuthorizationScreen(
     val brokers = authorizationViewModel.brokers.value
 
     val messageHandler = remember { MQTTMessageHandler(sensorsViewModel, devicesViewModel) }
-
-
-    val lastBroker = brokers.lastOrNull()
 
     fun handleLogin(
         broker: Broker,
@@ -119,8 +104,6 @@ fun AuthorizationScreen(
         }
     }
 
-
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -141,137 +124,38 @@ fun AuthorizationScreen(
 
         Spacer(modifier = Modifier.height(50.dp))
 
-        Column(modifier = Modifier.fillMaxWidth()) {
-            OutlinedTextField(
-                value = serverUri,
-                onValueChange = { serverUri = it },
-                label = { Text("Server URI") },
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            OutlinedTextField(
-                value = serverPort,
-                onValueChange = { serverPort = it },
-                label = { Text("Server Port") },
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            OutlinedTextField(
-                value = user,
-                onValueChange = { user = it },
-                label = { Text("User (optional)") },
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Password (optional)") },
-                shape = RoundedCornerShape(12.dp),
-                visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Button(
-                onClick = {
-                    handleAddBroker(
-                        serverUri,
-                        serverPort,
-                        user,
-                        password,
-                        onClearFields = {
-                            serverUri = ""
-                            serverPort = ""
-                            user = ""
-                            password = ""
-                        },
-                        authorizationViewModel
-                    )
-                },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-            ) {
-                Text("Добавить брокера", color = Color.White)
+        BrokerInputForm(
+            serverUri = serverUri,
+            serverPort = serverPort,
+            user = user,
+            password = password,
+            onServerUriChange = { serverUri = it },
+            onServerPortChange = { serverPort = it },
+            onUserChange = { user = it },
+            onPasswordChange = { password = it },
+            onAddBroker = {
+                handleAddBroker(
+                    serverUri,
+                    serverPort,
+                    user,
+                    password,
+                    onClearFields = {
+                        serverUri = ""
+                        serverPort = ""
+                        user = ""
+                        password = ""
+                    },
+                    authorizationViewModel
+                )
             }
-        }
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        lastBroker?.let { broker ->
-            Text("Последний сохранённый брокер:", style = MaterialTheme.typography.labelMedium)
-
-            Spacer(modifier = Modifier.height(1.dp))
-
-            BrokerItem(
-                broker,
-                onDelete = { handleDelete(broker, authorizationViewModel) },
-                onLogin = { handleLogin(broker, messageHandler, navHostController) }
-            )
-        }
-    }
-}
-
-@Composable
-fun BrokerItem(broker: Broker, onDelete: () -> Unit, onLogin: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(6.dp)
-            .shadow(4.dp, shape = RoundedCornerShape(12.dp)),
-        elevation = CardDefaults.elevatedCardElevation(8.dp)
-    ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Text(text = "URI: ${broker.serverUri}", style = MaterialTheme.typography.bodyLarge)
-            Text(text = "Port: ${broker.serverPort}", style = MaterialTheme.typography.bodyMedium)
-            broker.user?.let {
-                Text(
-                    text = "User: $it",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-            broker.password?.let {
-                Text(
-                    text = "Password: ${"*".repeat(it.length)}",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Button(
-                    onClick = onLogin,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                ) {
-                    Text("Войти", color = Color.White)
-                }
-                Spacer(modifier = Modifier.width(6.dp))
-                OutlinedButton(
-                    onClick = onDelete,
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Text("Удалить")
-                }
-            }
-        }
+        BrokerList(
+            brokers = brokers,
+            onDelete = { handleDelete(it, authorizationViewModel) },
+            onLogin = { handleLogin(it, messageHandler, navHostController) }
+        )
     }
 }
