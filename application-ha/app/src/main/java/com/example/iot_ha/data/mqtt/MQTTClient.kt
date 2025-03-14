@@ -12,15 +12,18 @@ import org.eclipse.paho.client.mqttv3.MqttMessage
 object MQTTClient {
     private var mqttClient: MqttClient? = null
     private var broker: Broker? = null
+    private var messageHandler: MQTTMessageHandler? = null
 
-    fun initialize(broker: Broker): MQTTClient {
+    fun initialize(broker: Broker, handler: MQTTMessageHandler): MQTTClient {
         this.broker = broker
+        this.messageHandler = handler
         return this
     }
 
-    fun reinitialize(newBroker: Broker): MQTTClient {
+    fun reinitialize(newBroker: Broker, handler: MQTTMessageHandler): MQTTClient {
         disconnect()
         broker = newBroker
+        messageHandler = handler
         return this
     }
 
@@ -57,7 +60,10 @@ object MQTTClient {
                 }
 
                 override fun messageArrived(topic: String, message: MqttMessage) {
+                    val payload = message.toString()
                     Log.i("MQTT", "📩 Получено сообщение: $message на топик: $topic")
+
+                    messageHandler?.handleMessage(topic, payload)
                 }
 
                 override fun deliveryComplete(token: IMqttDeliveryToken) {

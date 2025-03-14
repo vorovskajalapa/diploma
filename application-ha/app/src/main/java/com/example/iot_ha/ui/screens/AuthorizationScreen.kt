@@ -39,23 +39,33 @@ import androidx.navigation.NavHostController
 import com.example.iot_ha.R
 import com.example.iot_ha.data.local.RoomLocalDatabase
 import com.example.iot_ha.data.local.broker.Broker
+import com.example.iot_ha.data.local.broker.BrokerState
 import com.example.iot_ha.data.mqtt.MQTTClient
+import com.example.iot_ha.data.mqtt.MQTTMessageHandler
 import com.example.iot_ha.ui.viewmodels.AuthorizationViewModel
 import com.example.iot_ha.ui.viewmodels.factory.AuthorizationViewModelFactory
+import com.example.iot_ha.ui.viewmodels.shared.DevicesViewModel
+import com.example.iot_ha.ui.viewmodels.shared.SensorsViewModel
 
 @Composable
-fun AuthorizationScreen(navHostController: NavHostController) {
+fun AuthorizationScreen(
+    navHostController: NavHostController,
+    sensorsViewModel: SensorsViewModel,
+    devicesViewModel: DevicesViewModel
+) {
     var serverUri by remember { mutableStateOf("") }
     var serverPort by remember { mutableStateOf("") }
     var user by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-
 
     val db = RoomLocalDatabase.getInstance(LocalContext.current)
     val authorizationViewModel: AuthorizationViewModel =
         viewModel(factory = (AuthorizationViewModelFactory(db)))
 
     val brokers = authorizationViewModel.brokers.value
+
+
+    val messageHandler = remember { MQTTMessageHandler(sensorsViewModel, devicesViewModel) }
 
 
     val lastBroker = brokers.lastOrNull()
@@ -156,9 +166,15 @@ fun AuthorizationScreen(navHostController: NavHostController) {
                 broker,
                 onDelete = { authorizationViewModel.deleteBroker(broker) },
                 onLogin = {
-                    val mqttClient = MQTTClient.reinitialize(broker)
+                    BrokerState.brokerId = broker.id
+
+                    val mqttClient = MQTTClient.reinitialize(broker, messageHandler)
                     val isSuccess = mqttClient.connect()
                     if (isSuccess) {
+
+                        mqttClient.subscribe("homeassistant/#")
+                        mqttClient.subscribe("zigbee/#")
+                        mqttClient.subscribe("devicelist")
                         navHostController.navigate("home")
                     }
                 }

@@ -9,6 +9,7 @@ import com.example.iot_ha.data.local.broker.Broker
 import com.example.iot_ha.data.local.broker.BrokerDAO
 import com.example.iot_ha.data.local.command.Command
 import com.example.iot_ha.data.local.device.Device
+import com.example.iot_ha.data.local.device.DeviceDAO
 
 @Database(
     entities = [Broker::class, Device::class, Command::class],
@@ -18,6 +19,7 @@ import com.example.iot_ha.data.local.device.Device
 @TypeConverters(MapTypeConvertor::class)
 abstract class RoomLocalDatabase : RoomDatabase() {
     abstract fun brokerDAO(): BrokerDAO
+    abstract fun deviceDAO(): DeviceDAO
 
     companion object {
         @Volatile
