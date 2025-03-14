@@ -17,23 +17,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.iot_ha.R
+import com.example.iot_ha.data.local.device.DeviceState
 import com.example.iot_ha.ui.components.DeviceCard
 import com.example.iot_ha.ui.viewmodels.shared.DevicesViewModel
+import com.example.iot_ha.utils.toBooleanState
 
 @Composable
 fun DevicesScreen(navHostController: NavHostController, devicesViewModel: DevicesViewModel) {
 
     val devices by devicesViewModel.devices.collectAsState()
+    val switchDevices by devicesViewModel.getDevicesByTypeFlow("switch").collectAsState()
+    val deviceState by DeviceState.devicesData.collectAsState()
 
-    val predefinedSelectDevice = remember {
-        object {
-            val id = -1
-            val friendlyName = "Выбор режима"
-            val type = "select"
-            val value = "Авто"
-            val options = listOf("Авто", "Ручной", "Выключен")
-        }
-    }
+
+//    val predefinedSelectDevice = remember {
+//        object {
+//            val id = -1
+//            val friendlyName = "Выбор режима"
+//            val type = "select"
+//            val value = "Авто"
+//            val options = listOf("Авто", "Ручной", "Выключен")
+//        }
+//    }
 
     Scaffold { paddingValues ->
         Column(
@@ -43,28 +48,30 @@ fun DevicesScreen(navHostController: NavHostController, devicesViewModel: Device
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
-            DeviceCard(
-                deviceId = predefinedSelectDevice.id,
-                imageRes = R.drawable.mqtt_logo,
-                name = predefinedSelectDevice.friendlyName,
-                type = predefinedSelectDevice.type,
-                value = predefinedSelectDevice.value,
-                options = predefinedSelectDevice.options,
-                navController = navHostController,
-                onSelectChange = { option ->
-                    devicesViewModel.onSelectChange(predefinedSelectDevice.id, option)
-                }
-            )
+//            DeviceCard(
+//                deviceId = predefinedSelectDevice.id,
+//                imageRes = R.drawable.mqtt_logo,
+//                name = predefinedSelectDevice.friendlyName,
+//                type = predefinedSelectDevice.type,
+//                value = predefinedSelectDevice.value,
+//                options = predefinedSelectDevice.options,
+//                navController = navHostController,
+//                onSelectChange = { option ->
+//                    devicesViewModel.onSelectChange(predefinedSelectDevice.id, option)
+//                }
+//            )
+//
+//            Spacer(modifier = Modifier.height(8.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
+            switchDevices.forEach { device ->
+                val value = (deviceState[device.id]?.get("state") as? String)?.toBooleanState() ?: false
 
-            devices.forEach { device ->
                 DeviceCard(
                     deviceId = device.id,
                     imageRes = R.drawable.mqtt_logo,
                     name = device.friendlyName,
                     type = "switch",
-                    value = false,
+                    value = value,
                     navController = navHostController,
                     onToggle = { state ->
                         devicesViewModel.onToggle(device.id, state)
@@ -72,6 +79,7 @@ fun DevicesScreen(navHostController: NavHostController, devicesViewModel: Device
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
+
 
         }
     }

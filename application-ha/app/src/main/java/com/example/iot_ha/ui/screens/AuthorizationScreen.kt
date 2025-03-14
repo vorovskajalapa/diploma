@@ -167,7 +167,10 @@ fun AuthorizationScreen(
 
             BrokerItem(
                 broker,
-                onDelete = { authorizationViewModel.deleteBroker(broker) },
+                onDelete = {
+                    val mqttClient = MQTTClient.getInstance()
+                    mqttClient.disconnect()
+                    authorizationViewModel.deleteBroker(broker) },
                 onLogin = {
                     BrokerState.setBrokerId(broker.id)
 

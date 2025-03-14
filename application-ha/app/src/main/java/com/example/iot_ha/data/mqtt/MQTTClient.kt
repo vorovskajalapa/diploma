@@ -92,7 +92,7 @@ object MQTTClient {
         }
     }
 
-    private fun disconnect() {
+    fun disconnect() {
         try {
             mqttClient?.disconnect()
             Log.i("MQTT", "🔌 Отключен от брокера")

@@ -4,6 +4,7 @@ import android.util.Log
 import com.example.iot_ha.data.local.broker.BrokerState
 import com.example.iot_ha.data.local.command.Command
 import com.example.iot_ha.data.local.device.Device
+import com.example.iot_ha.data.local.device.DeviceState
 import com.example.iot_ha.ui.viewmodels.shared.DevicesViewModel
 import com.example.iot_ha.ui.viewmodels.shared.SensorsViewModel
 import org.json.JSONObject
@@ -24,8 +25,26 @@ class MQTTMessageHandler(
     }
 
     private fun handleDeviceStateMessage(topic: String, payload: String) {
-        sensorsViewModel.test()
+        val ieeeAddr = extractIeeeAddrFromTopic(topic)
+        val deviceId = devicesViewModel.devices.value.find { it.ieeeAddr == ieeeAddr }?.id
+
+        if (deviceId != null) {
+            DeviceState.updateDeviceData(deviceId, payload)
+            Log.i("KAKASHKI", "PRESS")
+            Log.i("STATE", DeviceState.devicesData.value.toString())
+//            when (val value = DeviceState.getDeviceValue(deviceId, "power")) {
+//                is String -> println("Значение - строка: $value")
+//                is Int -> println("Значение - число: $value")
+//                is Double -> println("Значение - дробное число: $value")
+//                is Boolean -> println("Значение - булево: $value")
+//                else -> println("Неизвестный тип: ${value?.javaClass}")
+//            }
+
+        } else {
+            println("Устройство с IEEE Addr $ieeeAddr не найдено")
+        }
     }
+
 
     private fun handleDeviceCommandMessage(topic: String, payload: String) {
         try {
@@ -48,7 +67,7 @@ class MQTTMessageHandler(
             val commandType = extractCommandTypeFromTopic(topic)
             val deviceIeeeAddr = extractIeeeAddrFromTopic(topic)
 
-            if (deviceIeeeAddr != null) {
+            if (deviceIeeeAddr != null && commandType != "unknown") {
                 devicesViewModel.getDeviceIdByIeeeAddr(deviceIeeeAddr) { deviceId ->
                     if (deviceId != null) {
                         val command = Command(
@@ -76,8 +95,8 @@ class MQTTMessageHandler(
     private fun extractCommandTypeFromTopic(topic: String): String {
         return when {
             topic.contains("/switch/", ignoreCase = true) -> "switch"
-            topic.contains("/select/", ignoreCase = true) -> "select"
-            topic.contains("/light/", ignoreCase = true) -> "dimmer"
+//            topic.contains("/select/", ignoreCase = true) -> "select"
+//            topic.contains("/light/", ignoreCase = true) -> "dimmer"
             else -> "unknown"
         }
     }

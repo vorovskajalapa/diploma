@@ -7,10 +7,15 @@ import com.example.iot_ha.data.local.RoomLocalDatabase
 import com.example.iot_ha.data.local.broker.BrokerState
 import com.example.iot_ha.data.local.command.Command
 import com.example.iot_ha.data.local.device.Device
+import com.example.iot_ha.data.mqtt.MQTTClient
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 class DevicesViewModel(private val db: RoomLocalDatabase) : ViewModel() {
     private val _devices = MutableStateFlow<List<Device>>(emptyList())
@@ -26,6 +31,7 @@ class DevicesViewModel(private val db: RoomLocalDatabase) : ViewModel() {
         }
     }
 
+
     private suspend fun loadDevices(brokerId: Int) {
         db.deviceDAO().getDevicesByBrokerFlow(brokerId)
             .collect { deviceList ->
@@ -38,6 +44,20 @@ class DevicesViewModel(private val db: RoomLocalDatabase) : ViewModel() {
             val device = db.deviceDAO().getDeviceByIeeeAddr(ieeeAddr)
             callback(device?.id)
         }
+    }
+
+    fun getDevicesByTypeFlow(type: String): StateFlow<List<Device>> {
+        val resultFlow = MutableStateFlow<List<Device>>(emptyList())
+
+        viewModelScope.launch {
+            db.commandDAO().getCommandsByTypeFlow(type).collect { commands ->
+                val deviceIds = commands.map { it.deviceId }.toSet()
+                val filteredDevices = _devices.value.filter { it.id in deviceIds }
+                resultFlow.value = filteredDevices
+            }
+        }
+
+        return resultFlow
     }
 
 
@@ -72,36 +92,34 @@ class DevicesViewModel(private val db: RoomLocalDatabase) : ViewModel() {
 
     fun onToggle(deviceId: Int, state: Boolean) {
         viewModelScope.launch {
-            val command = getCommandForDevice(deviceId, state)
-            sendCommandToMqtt(command)
+            val cmd = db.commandDAO().getSwitchCommandByDeviceId(deviceId)
+
+            val newState = if (!state) cmd?.payloadOff else cmd?.payloadOn
+            cmd?.let {
+                if (newState != null) {
+                    sendCommandToMqtt(it.commandTopic, newState)
+                }
+            }
         }
     }
 
-    fun onSliderChange(deviceId: Int, value: Float) {
-        viewModelScope.launch {
-            val command = getCommandForDevice(deviceId, value)
-            sendCommandToMqtt(command)
-        }
-    }
-
+//    fun onSliderChange(deviceId: Int, value: Float) {
+//        viewModelScope.launch {
+//            val command = getCommandForDevice(deviceId, value)
+//            sendCommandToMqtt(command)
+//        }
+//    }
+//
     fun onSelectChange(deviceId: Int, option: String) {
         viewModelScope.launch {
-            val command = getCommandForDevice(deviceId, option)
-            sendCommandToMqtt(command)
+            sendCommandToMqtt("command", "")
         }
     }
 
-    private suspend fun getCommandForDevice(deviceId: Int, value: Any): String {
-        return "Команда для $deviceId: $value"
-    }
-
-    private fun sendCommandToMqtt(command: String) {
+    private fun sendCommandToMqtt(topic: String, command: String) {
+        val mqttClient = MQTTClient.getInstance()
+        mqttClient.publish(topic, command)
         println("Отправка в MQTT: $command")
-    }
-
-
-    fun changeSwitchDeviceState(deviceId: Int, checked: Boolean) {
-
     }
 }
 
