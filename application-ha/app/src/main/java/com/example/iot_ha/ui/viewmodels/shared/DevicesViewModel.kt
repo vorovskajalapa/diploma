@@ -70,6 +70,35 @@ class DevicesViewModel(private val db: RoomLocalDatabase) : ViewModel() {
         }
     }
 
+    fun onToggle(deviceId: Int, state: Boolean) {
+        viewModelScope.launch {
+            val command = getCommandForDevice(deviceId, state)
+            sendCommandToMqtt(command)
+        }
+    }
+
+    fun onSliderChange(deviceId: Int, value: Float) {
+        viewModelScope.launch {
+            val command = getCommandForDevice(deviceId, value)
+            sendCommandToMqtt(command)
+        }
+    }
+
+    fun onSelectChange(deviceId: Int, option: String) {
+        viewModelScope.launch {
+            val command = getCommandForDevice(deviceId, option)
+            sendCommandToMqtt(command)
+        }
+    }
+
+    private suspend fun getCommandForDevice(deviceId: Int, value: Any): String {
+        return "Команда для $deviceId: $value"
+    }
+
+    private fun sendCommandToMqtt(command: String) {
+        println("Отправка в MQTT: $command")
+    }
+
 
     fun changeSwitchDeviceState(deviceId: Int, checked: Boolean) {
 

@@ -46,6 +46,10 @@ import com.example.iot_ha.ui.viewmodels.AuthorizationViewModel
 import com.example.iot_ha.ui.viewmodels.factory.AuthorizationViewModelFactory
 import com.example.iot_ha.ui.viewmodels.shared.DevicesViewModel
 import com.example.iot_ha.ui.viewmodels.shared.SensorsViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun AuthorizationScreen(
@@ -170,10 +174,14 @@ fun AuthorizationScreen(
                     val mqttClient = MQTTClient.reinitialize(broker, messageHandler)
                     val isSuccess = mqttClient.connect()
                     if (isSuccess) {
-                        mqttClient.subscribe("homeassistant/#")
-                        mqttClient.subscribe("zigbee/#")
-                        mqttClient.subscribe("devicelist")
                         navHostController.navigate("home")
+
+                        CoroutineScope(Dispatchers.IO).launch {
+                            mqttClient.subscribe("devicelist")
+                            delay(500) // todo: fix (если получится), хз не фикситься, не успевает обработать
+                            mqttClient.subscribe("homeassistant/#")
+                            mqttClient.subscribe("zigbee/#")
+                        }
                     }
                 }
             )

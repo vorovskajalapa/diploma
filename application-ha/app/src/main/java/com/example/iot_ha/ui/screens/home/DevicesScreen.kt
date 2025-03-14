@@ -1,5 +1,6 @@
 package com.example.iot_ha.ui.screens.home
 
+import DeviceActionBuilder
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -50,10 +51,11 @@ fun DevicesScreen(navHostController: NavHostController, devicesViewModel: Device
                 value = predefinedSelectDevice.value,
                 options = predefinedSelectDevice.options,
                 navController = navHostController,
-                onSelectChange = { deviceId, selected ->
-                    // Логика обработки выбора (если нужно)
+                onSelectChange = { option ->
+                    devicesViewModel.onSelectChange(predefinedSelectDevice.id, option)
                 }
             )
+
             Spacer(modifier = Modifier.height(8.dp))
 
             devices.forEach { device ->
@@ -64,12 +66,14 @@ fun DevicesScreen(navHostController: NavHostController, devicesViewModel: Device
                     type = "switch",
                     value = false,
                     navController = navHostController,
-                    onToggle = { deviceId, isChecked ->
-                        devicesViewModel.changeSwitchDeviceState(deviceId, isChecked)
+                    onToggle = { state ->
+                        devicesViewModel.onToggle(device.id, state)
                     }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
+
         }
     }
 }
+

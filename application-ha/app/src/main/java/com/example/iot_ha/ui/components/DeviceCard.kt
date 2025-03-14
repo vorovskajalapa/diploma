@@ -47,9 +47,9 @@ fun DeviceCard(
     type: String,
     value: Any,
     navController: NavHostController,
-    onToggle: ((Int, Boolean) -> Unit)? = null,
-    onSliderChange: ((Int, Float) -> Unit)? = null,
-    onSelectChange: ((Int, String) -> Unit)? = null,
+    onToggle: ((Boolean) -> Unit)? = null,
+    onSliderChange: ((Float) -> Unit)? = null,
+    onSelectChange: ((String) -> Unit)? = null,
     options: List<String> = emptyList()
 ) {
     var checked by remember { mutableStateOf(value as? Boolean ?: false) }
@@ -94,7 +94,7 @@ fun DeviceCard(
                             checked = checked,
                             onCheckedChange = {
                                 checked = it
-                                onToggle?.invoke(deviceId, it)
+                                onToggle?.invoke(it)
                             },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = Color.White,
@@ -110,7 +110,7 @@ fun DeviceCard(
                             value = sliderValue,
                             onValueChange = {
                                 sliderValue = it
-                                onSliderChange?.invoke(deviceId, it)
+                                onSliderChange?.invoke(it)
                             },
                             valueRange = 0f..100f,
                             colors = SliderDefaults.colors(
@@ -143,7 +143,7 @@ fun DeviceCard(
                                         onClick = {
                                             selectedOption = option
                                             expanded = false
-                                            onSelectChange?.invoke(deviceId, option)
+                                            onSelectChange?.invoke(option)
                                         }
                                     )
                                 }
