@@ -9,13 +9,9 @@ import com.example.iot_ha.data.local.command.Command
 import com.example.iot_ha.data.local.device.Device
 import com.example.iot_ha.data.mqtt.MQTTClient
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 class DevicesViewModel(private val db: RoomLocalDatabase) : ViewModel() {
     private val _devices = MutableStateFlow<List<Device>>(emptyList())
@@ -103,7 +99,7 @@ class DevicesViewModel(private val db: RoomLocalDatabase) : ViewModel() {
         }
     }
 
-//    fun onSliderChange(deviceId: Int, value: Float) {
+    //    fun onSliderChange(deviceId: Int, value: Float) {
 //        viewModelScope.launch {
 //            val command = getCommandForDevice(deviceId, value)
 //            sendCommandToMqtt(command)

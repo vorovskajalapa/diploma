@@ -47,6 +47,7 @@ fun AppNavHost(
                 devicesViewModel = devicesViewModel
             )
         }
+
         composable("home") {
             HomeScreen(
                 navHostController = navController,
@@ -55,7 +56,10 @@ fun AppNavHost(
         }
 
         composable("device_details/{deviceId}") { backStackEntry ->
-            DeviceDetailScreen(backStackEntry)
+            DeviceDetailScreen(
+                backStackEntry = backStackEntry,
+                devicesViewModel = devicesViewModel,
+            )
         }
     }
 }

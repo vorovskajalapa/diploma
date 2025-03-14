@@ -73,6 +73,54 @@ fun AuthorizationScreen(
 
     val lastBroker = brokers.lastOrNull()
 
+    fun handleLogin(
+        broker: Broker,
+        messageHandler: MQTTMessageHandler,
+        navHostController: NavHostController
+    ) {
+        BrokerState.setBrokerId(broker.id)
+
+        val mqttClient = MQTTClient.reinitialize(broker, messageHandler)
+        val isSuccess = mqttClient.connect()
+        if (isSuccess) {
+            navHostController.navigate("home")
+
+            CoroutineScope(Dispatchers.IO).launch {
+                mqttClient.subscribe("devicelist")
+                delay(500) // todo: fix (если получится), хз не фикситься, не успевает обработать
+                mqttClient.subscribe("homeassistant/#")
+                mqttClient.subscribe("zigbee/#")
+            }
+        }
+    }
+
+    fun handleDelete(broker: Broker, authorizationViewModel: AuthorizationViewModel) {
+        val mqttClient = MQTTClient.getInstance()
+        mqttClient.disconnect()
+        authorizationViewModel.deleteBroker(broker)
+    }
+
+    fun handleAddBroker(
+        serverUri: String,
+        serverPort: String,
+        user: String,
+        password: String,
+        onClearFields: () -> Unit,
+        authorizationViewModel: AuthorizationViewModel
+    ) {
+        if (serverUri.isNotBlank() && serverPort.isNotBlank()) {
+            authorizationViewModel.addBroker(
+                serverUri,
+                serverPort.toIntOrNull() ?: 1883,
+                user.takeIf { it.isNotBlank() },
+                password.takeIf { it.isNotBlank() }
+            )
+            onClearFields()
+        }
+    }
+
+
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -137,18 +185,19 @@ fun AuthorizationScreen(
 
             Button(
                 onClick = {
-                    if (serverUri.isNotBlank() && serverPort.isNotBlank()) {
-                        authorizationViewModel.addBroker(
-                            serverUri,
-                            serverPort.toIntOrNull() ?: 1883,
-                            user.takeIf { it.isNotBlank() },
-                            password.takeIf { it.isNotBlank() }
-                        )
-                        serverUri = ""
-                        serverPort = ""
-                        user = ""
-                        password = ""
-                    }
+                    handleAddBroker(
+                        serverUri,
+                        serverPort,
+                        user,
+                        password,
+                        onClearFields = {
+                            serverUri = ""
+                            serverPort = ""
+                            user = ""
+                            password = ""
+                        },
+                        authorizationViewModel
+                    )
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
@@ -167,26 +216,8 @@ fun AuthorizationScreen(
 
             BrokerItem(
                 broker,
-                onDelete = {
-                    val mqttClient = MQTTClient.getInstance()
-                    mqttClient.disconnect()
-                    authorizationViewModel.deleteBroker(broker) },
-                onLogin = {
-                    BrokerState.setBrokerId(broker.id)
-
-                    val mqttClient = MQTTClient.reinitialize(broker, messageHandler)
-                    val isSuccess = mqttClient.connect()
-                    if (isSuccess) {
-                        navHostController.navigate("home")
-
-                        CoroutineScope(Dispatchers.IO).launch {
-                            mqttClient.subscribe("devicelist")
-                            delay(500) // todo: fix (если получится), хз не фикситься, не успевает обработать
-                            mqttClient.subscribe("homeassistant/#")
-                            mqttClient.subscribe("zigbee/#")
-                        }
-                    }
-                }
+                onDelete = { handleDelete(broker, authorizationViewModel) },
+                onLogin = { handleLogin(broker, messageHandler, navHostController) }
             )
         }
     }

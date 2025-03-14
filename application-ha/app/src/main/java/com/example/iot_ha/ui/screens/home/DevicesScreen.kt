@@ -1,6 +1,5 @@
 package com.example.iot_ha.ui.screens.home
 
-import DeviceActionBuilder
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,7 +11,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -20,6 +18,7 @@ import com.example.iot_ha.R
 import com.example.iot_ha.data.local.device.DeviceState
 import com.example.iot_ha.ui.components.DeviceCard
 import com.example.iot_ha.ui.viewmodels.shared.DevicesViewModel
+import com.example.iot_ha.utils.Constants
 import com.example.iot_ha.utils.toBooleanState
 
 @Composable
@@ -64,14 +63,15 @@ fun DevicesScreen(navHostController: NavHostController, devicesViewModel: Device
 //            Spacer(modifier = Modifier.height(8.dp))
 
             switchDevices.forEach { device ->
-                val value = (deviceState[device.id]?.get("state") as? String)?.toBooleanState() ?: false
+
+                val deviceData = deviceState[device.id]
 
                 DeviceCard(
                     deviceId = device.id,
                     imageRes = R.drawable.mqtt_logo,
                     name = device.friendlyName,
-                    type = "switch",
-                    value = value,
+                    type = Constants.SWITCH_TYPE,
+                    value = (deviceData?.get("state") as? String)?.toBooleanState() ?: false,
                     navController = navHostController,
                     onToggle = { state ->
                         devicesViewModel.onToggle(device.id, state)

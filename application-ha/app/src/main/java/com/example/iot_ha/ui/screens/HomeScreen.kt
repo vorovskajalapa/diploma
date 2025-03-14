@@ -31,23 +31,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.iot_ha.data.local.RoomLocalDatabase
 import com.example.iot_ha.ui.screens.home.DevicesScreen
 import com.example.iot_ha.ui.screens.home.RoomsScreen
 import com.example.iot_ha.ui.screens.home.SettingsScreen
-import com.example.iot_ha.ui.viewmodels.HomeViewModel
-import com.example.iot_ha.ui.viewmodels.factory.HomeViewModelFactory
 import com.example.iot_ha.ui.viewmodels.shared.DevicesViewModel
+import com.example.iot_ha.utils.Constants
 
 @Composable
 fun HomeScreen(navHostController: NavHostController, devicesViewModel: DevicesViewModel) {
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Устройства", "Комнаты", "Настройки")
 
     val db = RoomLocalDatabase.getInstance(LocalContext.current)
-    val viewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory(db))
+//    val viewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory(db))
 
 
     Column(
@@ -63,7 +60,7 @@ fun HomeScreen(navHostController: NavHostController, devicesViewModel: DevicesVi
             contentPadding = PaddingValues(horizontal = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            itemsIndexed(tabs) { index, title ->
+            itemsIndexed(Constants.TABS_LIST) { index, title ->
                 TabButton(
                     title = title,
                     isSelected = selectedTab == index,
