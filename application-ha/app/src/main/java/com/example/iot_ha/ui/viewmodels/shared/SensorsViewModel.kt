@@ -6,7 +6,7 @@ import com.example.iot_ha.ui.viewmodels.shared.data.SensorsData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class SensorsViewModel: ViewModel() {
+class SensorsViewModel : ViewModel() {
     private val _sensorData = MutableStateFlow<Map<String, SensorsData>>(emptyMap())
     val sensorData: StateFlow<Map<String, SensorsData>> = _sensorData
 

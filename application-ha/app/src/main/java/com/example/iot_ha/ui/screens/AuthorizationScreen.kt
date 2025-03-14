@@ -64,7 +64,6 @@ fun AuthorizationScreen(
 
     val brokers = authorizationViewModel.brokers.value
 
-
     val messageHandler = remember { MQTTMessageHandler(sensorsViewModel, devicesViewModel) }
 
 
@@ -166,12 +165,11 @@ fun AuthorizationScreen(
                 broker,
                 onDelete = { authorizationViewModel.deleteBroker(broker) },
                 onLogin = {
-                    BrokerState.brokerId = broker.id
+                    BrokerState.setBrokerId(broker.id)
 
                     val mqttClient = MQTTClient.reinitialize(broker, messageHandler)
                     val isSuccess = mqttClient.connect()
                     if (isSuccess) {
-
                         mqttClient.subscribe("homeassistant/#")
                         mqttClient.subscribe("zigbee/#")
                         mqttClient.subscribe("devicelist")

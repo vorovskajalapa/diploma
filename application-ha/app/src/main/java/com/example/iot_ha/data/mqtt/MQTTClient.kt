@@ -34,7 +34,8 @@ object MQTTClient {
     fun connect(): Boolean {
         return try {
             val clientId = MqttClient.generateClientId()
-            mqttClient = MqttClient("tcp://${broker?.serverUri}:${broker?.serverPort}", clientId, null)
+            mqttClient =
+                MqttClient("tcp://${broker?.serverUri}:${broker?.serverPort}", clientId, null)
 
             val options = MqttConnectOptions().apply {
                 userName = broker?.user

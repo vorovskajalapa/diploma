@@ -1,6 +1,7 @@
 package com.example.iot_ha.ui.components
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,11 +12,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -28,11 +34,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.iot_ha.R
+import androidx.navigation.NavHostController
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeviceCard(
     deviceId: Int,
@@ -40,21 +46,27 @@ fun DeviceCard(
     name: String,
     type: String,
     value: Any,
-//    navController: NavHostController,
+    navController: NavHostController,
     onToggle: ((Int, Boolean) -> Unit)? = null,
-    onSliderChange: ((Int, Float) -> Unit)? = null
+    onSliderChange: ((Int, Float) -> Unit)? = null,
+    onSelectChange: ((Int, String) -> Unit)? = null,
+    options: List<String> = emptyList()
 ) {
     var checked by remember { mutableStateOf(value as? Boolean ?: false) }
     var sliderValue by remember { mutableFloatStateOf(value as? Float ?: 0f) }
+    var selectedOption by remember {
+        mutableStateOf(
+            value as? String ?: options.firstOrNull().orEmpty()
+        )
+    }
+    var expanded by remember { mutableStateOf(false) }
 
     Card(
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp),
-//            .clickable {
-//                navController.navigate("device_details/$deviceId")
-//            },
+            .padding(8.dp)
+            .clickable { navController.navigate("device_details/$deviceId") },
         elevation = CardDefaults.cardElevation(6.dp)
     ) {
         Row(
@@ -108,46 +120,42 @@ fun DeviceCard(
                         )
                     }
 
+                    "select" -> {
+                        ExposedDropdownMenuBox(
+                            expanded = expanded,
+                            onExpandedChange = { expanded = it }
+                        ) {
+                            TextField(
+                                value = selectedOption,
+                                onValueChange = {},
+                                readOnly = true,
+                                modifier = Modifier.menuAnchor(),
+                                label = { Text("Выберите") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }
+                            )
+                            ExposedDropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false }
+                            ) {
+                                options.forEach { option ->
+                                    DropdownMenuItem(
+                                        text = { Text(option) },
+                                        onClick = {
+                                            selectedOption = option
+                                            expanded = false
+                                            onSelectChange?.invoke(deviceId, option)
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
                     else -> {
                         Text(text = value.toString(), fontSize = 14.sp, color = Color.Black)
                     }
                 }
             }
         }
-    }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun MqttDeviceCardPreview() {
-    Column {
-        DeviceCard(
-            deviceId = 1,
-            imageRes = R.drawable.mqtt_logo,
-            name = "Smart Light",
-            type = "switch",
-            value = true,
-            onToggle = { deviceId, isChecked ->
-                println("Устройство $deviceId: $isChecked")
-            }
-        )
-        DeviceCard(
-            deviceId = 2,
-            imageRes = R.drawable.mqtt_logo,
-            name = "Temperature",
-            type = "text",
-            value = "22°C"
-        )
-        DeviceCard(
-            deviceId = 3,
-            imageRes = R.drawable.mqtt_logo,
-            name = "Dimmer",
-            type = "slider",
-            value = 50f,
-            onSliderChange = { deviceId, value ->
-                println("Устройство $deviceId: $value")
-            }
-        )
     }
 }

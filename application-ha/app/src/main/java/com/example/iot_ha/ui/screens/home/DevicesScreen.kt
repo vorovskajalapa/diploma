@@ -1,15 +1,75 @@
 package com.example.iot_ha.ui.screens.home
 
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
+import com.example.iot_ha.R
+import com.example.iot_ha.ui.components.DeviceCard
+import com.example.iot_ha.ui.viewmodels.shared.DevicesViewModel
 
 @Composable
-fun DevicesScreen() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("Экран девайсов")
+fun DevicesScreen(navHostController: NavHostController, devicesViewModel: DevicesViewModel) {
+
+    val devices by devicesViewModel.devices.collectAsState()
+
+    val predefinedSelectDevice = remember {
+        object {
+            val id = -1
+            val friendlyName = "Выбор режима"
+            val type = "select"
+            val value = "Авто"
+            val options = listOf("Авто", "Ручной", "Выключен")
+        }
+    }
+
+    Scaffold { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp)
+        ) {
+            DeviceCard(
+                deviceId = predefinedSelectDevice.id,
+                imageRes = R.drawable.mqtt_logo,
+                name = predefinedSelectDevice.friendlyName,
+                type = predefinedSelectDevice.type,
+                value = predefinedSelectDevice.value,
+                options = predefinedSelectDevice.options,
+                navController = navHostController,
+                onSelectChange = { deviceId, selected ->
+                    // Логика обработки выбора (если нужно)
+                }
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            devices.forEach { device ->
+                DeviceCard(
+                    deviceId = device.id,
+                    imageRes = R.drawable.mqtt_logo,
+                    name = device.friendlyName,
+                    type = "switch",
+                    value = false,
+                    navController = navHostController,
+                    onToggle = { deviceId, isChecked ->
+                        devicesViewModel.changeSwitchDeviceState(deviceId, isChecked)
+                    }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
     }
 }

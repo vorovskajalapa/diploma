@@ -8,6 +8,7 @@ import androidx.room.TypeConverters
 import com.example.iot_ha.data.local.broker.Broker
 import com.example.iot_ha.data.local.broker.BrokerDAO
 import com.example.iot_ha.data.local.command.Command
+import com.example.iot_ha.data.local.command.CommandDAO
 import com.example.iot_ha.data.local.device.Device
 import com.example.iot_ha.data.local.device.DeviceDAO
 
@@ -20,6 +21,7 @@ import com.example.iot_ha.data.local.device.DeviceDAO
 abstract class RoomLocalDatabase : RoomDatabase() {
     abstract fun brokerDAO(): BrokerDAO
     abstract fun deviceDAO(): DeviceDAO
+    abstract fun commandDAO(): CommandDAO
 
     companion object {
         @Volatile

@@ -19,9 +19,17 @@ import com.example.iot_ha.data.local.device.Device
 data class Command(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val deviceId: Int,
+
     val commandTopic: String,
+
+    // for switch commands
     val payloadOn: String?,
     val payloadOff: String?,
+
+    // for select commands
     @TypeConverters(MapTypeConvertor::class) val options: Map<String, String>?,
-    val commandTemplate: String?
+    val commandTemplate: String?,
+
+
+    val commandType: String,
 )

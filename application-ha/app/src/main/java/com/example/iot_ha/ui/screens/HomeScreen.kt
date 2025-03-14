@@ -39,9 +39,10 @@ import com.example.iot_ha.ui.screens.home.RoomsScreen
 import com.example.iot_ha.ui.screens.home.SettingsScreen
 import com.example.iot_ha.ui.viewmodels.HomeViewModel
 import com.example.iot_ha.ui.viewmodels.factory.HomeViewModelFactory
+import com.example.iot_ha.ui.viewmodels.shared.DevicesViewModel
 
 @Composable
-fun HomeScreen(navHostController: NavHostController) {
+fun HomeScreen(navHostController: NavHostController, devicesViewModel: DevicesViewModel) {
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("Устройства", "Комнаты", "Настройки")
 
@@ -74,7 +75,11 @@ fun HomeScreen(navHostController: NavHostController) {
         Spacer(modifier = Modifier.height(8.dp))
 
         when (selectedTab) {
-            0 -> DevicesScreen()
+            0 -> DevicesScreen(
+                navHostController = navHostController,
+                devicesViewModel = devicesViewModel
+            )
+
             1 -> RoomsScreen()
             2 -> SettingsScreen()
         }
