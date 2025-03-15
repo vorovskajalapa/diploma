@@ -12,8 +12,10 @@ import com.example.iot_ha.ui.screens.HomeScreen
 import com.example.iot_ha.ui.screens.home.DeviceDetailScreen
 import com.example.iot_ha.ui.screens.home.RoomDetailScreen
 import com.example.iot_ha.ui.viewmodels.factory.DevicesViewModelFactory
+import com.example.iot_ha.ui.viewmodels.factory.RoomsViewModelFactory
 import com.example.iot_ha.ui.viewmodels.factory.SensorsViewModelFactory
 import com.example.iot_ha.ui.viewmodels.shared.DevicesViewModel
+import com.example.iot_ha.ui.viewmodels.shared.RoomsViewModel
 import com.example.iot_ha.ui.viewmodels.shared.SensorsViewModel
 
 @Composable
@@ -25,6 +27,7 @@ fun AppNavHost(
 
     val sensorsViewModel: SensorsViewModel = viewModel(factory = SensorsViewModelFactory())
     val devicesViewModel: DevicesViewModel = viewModel(factory = DevicesViewModelFactory(db))
+    val roomsViewModel: RoomsViewModel = viewModel(factory = RoomsViewModelFactory(db))
 
     NavHost(navController = navController, startDestination = startDestination) {
         composable(Routes.AUTH_SCREEN) {
@@ -38,7 +41,8 @@ fun AppNavHost(
         composable(Routes.HOME_SCREEN) {
             HomeScreen(
                 navHostController = navController,
-                devicesViewModel = devicesViewModel
+                devicesViewModel = devicesViewModel,
+                roomsViewModel = roomsViewModel
             )
         }
 
@@ -46,12 +50,16 @@ fun AppNavHost(
             DeviceDetailScreen(
                 backStackEntry = backStackEntry,
                 devicesViewModel = devicesViewModel,
+                roomsViewModel = roomsViewModel
             )
         }
 
         composable(Routes.ROOM_DETAILS_SCREEN) { backStackEntry ->
             RoomDetailScreen(
                 backStackEntry = backStackEntry,
+                navHostController = navController,
+                devicesViewModel = devicesViewModel,
+                roomsViewModel = roomsViewModel
             )
         }
     }

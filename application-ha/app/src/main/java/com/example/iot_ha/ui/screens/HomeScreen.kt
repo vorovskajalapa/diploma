@@ -33,11 +33,12 @@ import com.example.iot_ha.ui.screens.home.DevicesScreen
 import com.example.iot_ha.ui.screens.home.RoomsScreen
 import com.example.iot_ha.ui.screens.home.SettingsScreen
 import com.example.iot_ha.ui.viewmodels.shared.DevicesViewModel
+import com.example.iot_ha.ui.viewmodels.shared.RoomsViewModel
 import com.example.iot_ha.utils.Constants
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun HomeScreen(navHostController: NavHostController, devicesViewModel: DevicesViewModel) {
+fun HomeScreen(navHostController: NavHostController, devicesViewModel: DevicesViewModel, roomsViewModel: RoomsViewModel) {
     var selectedTab by remember { mutableIntStateOf(0) }
     var previousTab by remember { mutableIntStateOf(0) }
 
@@ -83,7 +84,7 @@ fun HomeScreen(navHostController: NavHostController, devicesViewModel: DevicesVi
         ) { tab ->
             when (tab) {
                 0 -> DevicesScreen(navHostController = navHostController, devicesViewModel = devicesViewModel)
-                1 -> RoomsScreen(navHostController = navHostController)
+                1 -> RoomsScreen(navHostController = navHostController, roomsViewModel = roomsViewModel)
                 2 -> SettingsScreen()
             }
         }

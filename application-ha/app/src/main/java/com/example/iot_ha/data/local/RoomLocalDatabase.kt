@@ -11,9 +11,11 @@ import com.example.iot_ha.data.local.command.Command
 import com.example.iot_ha.data.local.command.CommandDAO
 import com.example.iot_ha.data.local.device.Device
 import com.example.iot_ha.data.local.device.DeviceDAO
+import com.example.iot_ha.data.local.room.RoomEntity
+import com.example.iot_ha.data.local.room.RoomEntityDAO
 
 @Database(
-    entities = [Broker::class, Device::class, Command::class],
+    entities = [Broker::class, Device::class, Command::class, RoomEntity::class],
     version = 1,
     exportSchema = false
 )
@@ -22,6 +24,7 @@ abstract class RoomLocalDatabase : RoomDatabase() {
     abstract fun brokerDAO(): BrokerDAO
     abstract fun deviceDAO(): DeviceDAO
     abstract fun commandDAO(): CommandDAO
+    abstract fun roomEntityDAO(): RoomEntityDAO
 
     companion object {
         @Volatile

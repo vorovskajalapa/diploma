@@ -2,8 +2,10 @@ package com.example.iot_ha.data.local.device
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.example.iot_ha.data.local.broker.Broker
+import com.example.iot_ha.data.local.room.RoomEntity
 
 @Entity(
     tableName = "devices",
@@ -13,8 +15,15 @@ import com.example.iot_ha.data.local.broker.Broker
             parentColumns = ["id"],
             childColumns = ["brokerId"],
             onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = RoomEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["roomId"],
+            onDelete = ForeignKey.SET_NULL
         )
-    ]
+    ],
+    indices = [Index(value = ["roomId"])]
 )
 data class Device(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,

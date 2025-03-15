@@ -56,6 +56,19 @@ class DevicesViewModel(private val db: RoomLocalDatabase) : ViewModel() {
         return resultFlow
     }
 
+    fun getDevicesByRoomIdFlow(roomId: Int): StateFlow<List<Device>> {
+        val resultFlow = MutableStateFlow<List<Device>>(emptyList())
+
+        viewModelScope.launch {
+            db.deviceDAO().getDevicesByRoomIdFlow(roomId).collect { devices ->
+                val deviceIds = devices.map { it.id }.toSet()
+                val filteredDevices = _devices.value.filter { it.id in deviceIds }
+                resultFlow.value = filteredDevices
+            }
+        }
+
+        return resultFlow
+    }
 
     fun addDeviceIfNotExists(device: Device) {
         viewModelScope.launch {
@@ -99,13 +112,6 @@ class DevicesViewModel(private val db: RoomLocalDatabase) : ViewModel() {
         }
     }
 
-    //    fun onSliderChange(deviceId: Int, value: Float) {
-//        viewModelScope.launch {
-//            val command = getCommandForDevice(deviceId, value)
-//            sendCommandToMqtt(command)
-//        }
-//    }
-//
     fun onSelectChange(deviceId: Int, option: String) {
         viewModelScope.launch {
             sendCommandToMqtt("command", "")
@@ -117,5 +123,14 @@ class DevicesViewModel(private val db: RoomLocalDatabase) : ViewModel() {
         mqttClient.publish(topic, command)
         println("Отправка в MQTT: $command")
     }
+
+    fun assignRoomToDevice(deviceId: Int, roomId: Long?) {
+        viewModelScope.launch {
+            val device = db.deviceDAO().getDeviceById(deviceId)
+            val updatedDevice = device.copy(roomId = roomId)
+            db.deviceDAO().updateDevice(updatedDevice)
+        }
+    }
+
 }
 

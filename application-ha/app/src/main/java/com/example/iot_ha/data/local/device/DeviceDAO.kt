@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -25,4 +26,10 @@ interface DeviceDAO {
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertDevice(device: Device): Long
+
+    @Query("SELECT * FROM devices WHERE roomId = :roomId")
+    fun getDevicesByRoomIdFlow(roomId: Int): Flow<List<Device>>
+
+    @Update
+    suspend fun updateDevice(device: Device)
 }
