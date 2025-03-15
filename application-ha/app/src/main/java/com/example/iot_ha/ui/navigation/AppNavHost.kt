@@ -10,6 +10,7 @@ import com.example.iot_ha.data.local.RoomLocalDatabase
 import com.example.iot_ha.ui.screens.AuthorizationScreen
 import com.example.iot_ha.ui.screens.HomeScreen
 import com.example.iot_ha.ui.screens.home.DeviceDetailScreen
+import com.example.iot_ha.ui.screens.home.RoomDetailScreen
 import com.example.iot_ha.ui.viewmodels.factory.DevicesViewModelFactory
 import com.example.iot_ha.ui.viewmodels.factory.SensorsViewModelFactory
 import com.example.iot_ha.ui.viewmodels.shared.DevicesViewModel
@@ -45,6 +46,12 @@ fun AppNavHost(
             DeviceDetailScreen(
                 backStackEntry = backStackEntry,
                 devicesViewModel = devicesViewModel,
+            )
+        }
+
+        composable(Routes.ROOM_DETAILS_SCREEN) { backStackEntry ->
+            RoomDetailScreen(
+                backStackEntry = backStackEntry,
             )
         }
     }

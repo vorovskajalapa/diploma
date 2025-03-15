@@ -1,0 +1,2108 @@
+ExampleInstrumentedTest.kt
+
+0001. package com.example.iot_ha
+0002. 
+0003. import androidx.test.ext.junit.runners.AndroidJUnit4
+0004. import androidx.test.platform.app.InstrumentationRegistry
+0005. import org.junit.Assert.assertEquals
+0006. import org.junit.Test
+0007. import org.junit.runner.RunWith
+0008. 
+0009. /**
+0010.  * Instrumented test, which will execute on an Android device.
+0011.  *
+0012.  * See [testing documentation](http://d.android.com/tools/testing).
+0013.  */
+0014. @RunWith(AndroidJUnit4::class)
+0015. class ExampleInstrumentedTest {
+0016.     @Test
+0017.     fun useAppContext() {
+0018.         // Context of the app under test.
+0019.         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
+0020.         assertEquals("com.example.iot_ha", appContext.packageName)
+0021.     }
+0022. }
+
+MainActivity.kt
+
+0023. package com.example.iot_ha
+0024. 
+0025. import android.os.Bundle
+0026. import androidx.activity.ComponentActivity
+0027. import androidx.activity.compose.setContent
+0028. import androidx.navigation.compose.rememberNavController
+0029. import com.example.iot_ha.ui.navigation.AppNavHost
+0030. 
+0031. class MainActivity : ComponentActivity() {
+0032.     override fun onCreate(savedInstanceState: Bundle?) {
+0033.         super.onCreate(savedInstanceState)
+0034. 
+0035.         setContent {
+0036.             val navController = rememberNavController()
+0037.             AppNavHost(navController, "auth")
+0038.         }
+0039.     }
+0040. }
+0041. 
+
+
+MapTypeConvertor.kt
+
+0042. package com.example.iot_ha.data.local
+0043. 
+0044. import androidx.room.TypeConverter
+0045. import com.google.gson.Gson
+0046. import com.google.gson.reflect.TypeToken
+0047. 
+0048. class MapTypeConvertor {
+0049.     private val gson = Gson()
+0050. 
+0051.     @TypeConverter
+0052.     fun fromMap(map: Map<String, String>?): String? {
+0053.         return gson.toJson(map)
+0054.     }
+0055. 
+0056.     @TypeConverter
+0057.     fun toMap(json: String?): Map<String, String>? {
+0058.         return json?.let {
+0059.             val type = object : TypeToken<Map<String, String>>() {}.type
+0060.             gson.fromJson(it, type)
+0061.         }
+0062.     }
+0063. }
+0064. 
+
+
+RoomLocalDatabase.kt
+
+0065. package com.example.iot_ha.data.local
+0066. 
+0067. import android.content.Context
+0068. import androidx.room.Database
+0069. import androidx.room.Room
+0070. import androidx.room.RoomDatabase
+0071. import androidx.room.TypeConverters
+0072. import com.example.iot_ha.data.local.broker.Broker
+0073. import com.example.iot_ha.data.local.broker.BrokerDAO
+0074. import com.example.iot_ha.data.local.command.Command
+0075. import com.example.iot_ha.data.local.command.CommandDAO
+0076. import com.example.iot_ha.data.local.device.Device
+0077. import com.example.iot_ha.data.local.device.DeviceDAO
+0078. 
+0079. @Database(
+0080.     entities = [Broker::class, Device::class, Command::class],
+0081.     version = 1,
+0082.     exportSchema = false
+0083. )
+0084. @TypeConverters(MapTypeConvertor::class)
+0085. abstract class RoomLocalDatabase : RoomDatabase() {
+0086.     abstract fun brokerDAO(): BrokerDAO
+0087.     abstract fun deviceDAO(): DeviceDAO
+0088.     abstract fun commandDAO(): CommandDAO
+0089. 
+0090.     companion object {
+0091.         @Volatile
+0092.         private var INSTANCE: RoomLocalDatabase? = null
+0093. 
+0094.         fun getInstance(context: Context): RoomLocalDatabase {
+0095.             return INSTANCE ?: synchronized(this) {
+0096.                 val instance = Room.databaseBuilder(
+0097.                     context.applicationContext,
+0098.                     RoomLocalDatabase::class.java,
+0099.                     "room_local_database"
+0100.                 ).build()
+0101.                 INSTANCE = instance
+0102.                 instance
+0103.             }
+0104.         }
+0105.     }
+0106. }
+
+Broker.kt
+
+0107. package com.example.iot_ha.data.local.broker
+0108. 
+0109. import androidx.room.Entity
+0110. import androidx.room.PrimaryKey
+0111. 
+0112. @Entity(tableName = "brokers")
+0113. data class Broker(
+0114.     @PrimaryKey(autoGenerate = true) val id: Int = 0,
+0115.     val serverUri: String,
+0116.     val serverPort: Int,
+0117.     val user: String?,
+0118.     val password: String?
+0119. )
+0120. 
+
+
+BrokerDAO.kt
+
+0121. package com.example.iot_ha.data.local.broker
+0122. 
+0123. import androidx.room.Dao
+0124. import androidx.room.Delete
+0125. import androidx.room.Insert
+0126. import androidx.room.OnConflictStrategy
+0127. import androidx.room.Query
+0128. 
+0129. @Dao
+0130. interface BrokerDAO {
+0131.     @Insert(onConflict = OnConflictStrategy.REPLACE)
+0132.     suspend fun insert(broker: Broker)
+0133. 
+0134.     @Query("SELECT * FROM brokers")
+0135.     suspend fun getAllBrokers(): List<Broker>
+0136. 
+0137.     @Query("SELECT * FROM brokers ORDER BY id DESC LIMIT 1")
+0138.     suspend fun getLastBroker(): Broker?
+0139. 
+0140.     @Delete
+0141.     suspend fun deleteBroker(broker: Broker)
+0142. }
+
+BrokerState.kt
+
+0143. package com.example.iot_ha.data.local.broker
+0144. 
+0145. import kotlinx.coroutines.flow.MutableStateFlow
+0146. import kotlinx.coroutines.flow.StateFlow
+0147. 
+0148. object BrokerState {
+0149.     private val _brokerId = MutableStateFlow<Int?>(null)
+0150.     val brokerId: StateFlow<Int?> = _brokerId
+0151. 
+0152.     fun setBrokerId(id: Int) {
+0153.         _brokerId.value = id
+0154.     }
+0155. }
+
+
+Command.kt
+
+0156. package com.example.iot_ha.data.local.command
+0157. 
+0158. import androidx.room.Entity
+0159. import androidx.room.ForeignKey
+0160. import androidx.room.PrimaryKey
+0161. import androidx.room.TypeConverters
+0162. import com.example.iot_ha.data.local.MapTypeConvertor
+0163. import com.example.iot_ha.data.local.device.Device
+0164. 
+0165. @Entity(
+0166.     tableName = "commands",
+0167.     foreignKeys = [ForeignKey(
+0168.         entity = Device::class,
+0169.         parentColumns = ["id"],
+0170.         childColumns = ["deviceId"],
+0171.         onDelete = ForeignKey.CASCADE
+0172.     )]
+0173. )
+0174. data class Command(
+0175.     @PrimaryKey(autoGenerate = true) val id: Int = 0,
+0176.     val deviceId: Int,
+0177. 
+0178.     val commandTopic: String,
+0179. 
+0180.     // for switch commands
+0181.     val payloadOn: String?,
+0182.     val payloadOff: String?,
+0183. 
+0184.     // for select commands
+0185.     @TypeConverters(MapTypeConvertor::class) val options: Map<String, String>?,
+0186.     val commandTemplate: String?,
+0187. 
+0188. 
+0189.     val commandType: String,
+0190. )
+
+
+CommandDAO.kt
+
+0191. package com.example.iot_ha.data.local.command
+0192. 
+0193. import androidx.room.Dao
+0194. import androidx.room.Insert
+0195. import androidx.room.OnConflictStrategy
+0196. import androidx.room.Query
+0197. import kotlinx.coroutines.flow.Flow
+0198. 
+0199. @Dao
+0200. interface CommandDAO {
+0201. 
+0202.     @Query("SELECT * FROM commands WHERE commandTopic = :commandTopic LIMIT 1")
+0203.     suspend fun getCommandByCommandTopic(commandTopic: String): Command?
+0204. 
+0205. 
+0206.     @Query("SELECT * FROM commands WHERE deviceId = :deviceId AND commandType = 'switch' LIMIT 1")
+0207.     suspend fun getSwitchCommandByDeviceId(deviceId: Int): Command?
+0208. 
+0209.     @Insert(onConflict = OnConflictStrategy.REPLACE)
+0210.     suspend fun insertCommand(command: Command)
+0211. 
+0212.     @Query("SELECT * FROM commands WHERE commandType = :type")
+0213.     fun getCommandsByTypeFlow(type: String): Flow<List<Command>>
+0214. }
+
+Device.kt
+
+0215. package com.example.iot_ha.data.local.device
+0216. 
+0217. import androidx.room.Entity
+0218. import androidx.room.ForeignKey
+0219. import androidx.room.PrimaryKey
+0220. import com.example.iot_ha.data.local.broker.Broker
+0221. 
+0222. @Entity(
+0223.     tableName = "devices",
+0224.     foreignKeys = [
+0225.         ForeignKey(
+0226.             entity = Broker::class,
+0227.             parentColumns = ["id"],
+0228.             childColumns = ["brokerId"],
+0229.             onDelete = ForeignKey.CASCADE
+0230.         )
+0231.     ]
+0232. )
+0233. data class Device(
+0234.     @PrimaryKey(autoGenerate = true) val id: Int = 0,
+0235.     val ieeeAddr: String,
+0236.     val friendlyName: String,
+0237.     val modelId: String,
+0238.     val topic: String,
+0239.     val roomId: Long?,
+0240.     val brokerId: Int
+0241. ) {
+0242.     companion object {
+0243.         fun create(
+0244.             ieeeAddr: String,
+0245.             friendlyName: String,
+0246.             modelId: String,
+0247.             roomId: Long?,
+0248.             brokerId: Int
+0249.         ): Device {
+0250.             val topic = "zigbee/0x$ieeeAddr"
+0251.             return Device(
+0252.                 ieeeAddr = "0x$ieeeAddr",
+0253.                 friendlyName = friendlyName,
+0254.                 modelId = modelId,
+0255.                 topic = topic,
+0256.                 roomId = roomId,
+0257.                 brokerId = brokerId
+0258.             )
+0259.         }
+0260.     }
+0261. }
+
+
+DeviceDAO.kt
+
+0262. package com.example.iot_ha.data.local.device
+0263. 
+0264. import androidx.room.Dao
+0265. import androidx.room.Insert
+0266. import androidx.room.OnConflictStrategy
+0267. import androidx.room.Query
+0268. import kotlinx.coroutines.flow.Flow
+0269. 
+0270. @Dao
+0271. interface DeviceDAO {
+0272.     @Insert(onConflict = OnConflictStrategy.REPLACE)
+0273.     suspend fun insert(device: Device)
+0274. 
+0275.     @Query("SELECT * FROM devices WHERE brokerId = :brokerId")
+0276.     suspend fun getDevicesByBroker(brokerId: Int): List<Device>
+0277. 
+0278.     @Query("SELECT * FROM devices WHERE brokerId = :brokerId")
+0279.     fun getDevicesByBrokerFlow(brokerId: Int): Flow<List<Device>>
+0280. 
+0281.     @Query("SELECT * FROM devices")
+0282.     suspend fun getAllDevices(): List<Device>
+0283. 
+0284.     @Query("SELECT * FROM devices WHERE ieeeAddr = :ieeeAddr LIMIT 1")
+0285.     suspend fun getDeviceByIeeeAddr(ieeeAddr: String): Device?
+0286. 
+0287.     @Query("SELECT * FROM devices WHERE id = :deviceId LIMIT 1")
+0288.     suspend fun getDeviceById(deviceId: Int): Device // ? был тут
+0289. 
+0290.     @Insert(onConflict = OnConflictStrategy.IGNORE)
+0291.     suspend fun insertDevice(device: Device): Long
+0292. }
+
+
+DeviceState.kt
+
+0293. package com.example.iot_ha.data.local.device
+0294. 
+0295. import kotlinx.coroutines.flow.MutableStateFlow
+0296. import kotlinx.coroutines.flow.StateFlow
+0297. import kotlinx.coroutines.flow.update
+0298. 
+0299. object DeviceState {
+0300.     private val _devicesData = MutableStateFlow<Map<Int, Map<String, Any>>>(emptyMap())
+0301.     val devicesData: StateFlow<Map<Int, Map<String, Any>>> = _devicesData
+0302. 
+0303.     fun updateDeviceData(deviceId: Int, payload: String) {
+0304.         val parsedData: Map<String, Any> = parseJson(payload)
+0305. 
+0306.         _devicesData.update { currentData ->
+0307.             currentData.toMutableMap().apply { this[deviceId] = parsedData }
+0308.         }
+0309.     }
+0310. 
+0311. 
+0312.     private fun parseJson(json: String): Map<String, Any> {
+0313.         return try {
+0314.             val jsonObject = org.json.JSONObject(json)
+0315.             jsonObject.keys().asSequence().associateWith { jsonObject.get(it) }
+0316.         } catch (e: Exception) {
+0317.             emptyMap()
+0318.         }
+0319.     }
+0320. 
+0321.     fun getDeviceValue(deviceId: Int, key: String): Any? {
+0322.         return _devicesData.value[deviceId]?.get(key)
+0323.     }
+0324. }
+
+
+MQTTClient.kt
+
+0325. package com.example.iot_ha.data.mqtt
+0326. 
+0327. import android.util.Log
+0328. import com.example.iot_ha.data.local.broker.Broker
+0329. import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
+0330. import org.eclipse.paho.client.mqttv3.MqttCallback
+0331. import org.eclipse.paho.client.mqttv3.MqttClient
+0332. import org.eclipse.paho.client.mqttv3.MqttConnectOptions
+0333. import org.eclipse.paho.client.mqttv3.MqttException
+0334. import org.eclipse.paho.client.mqttv3.MqttMessage
+0335. 
+0336. object MQTTClient {
+0337.     private var mqttClient: MqttClient? = null
+0338.     private var broker: Broker? = null
+0339.     private var messageHandler: MQTTMessageHandler? = null
+0340. 
+0341.     fun initialize(broker: Broker, handler: MQTTMessageHandler): MQTTClient {
+0342.         this.broker = broker
+0343.         this.messageHandler = handler
+0344.         return this
+0345.     }
+0346. 
+0347.     fun reinitialize(newBroker: Broker, handler: MQTTMessageHandler): MQTTClient {
+0348.         disconnect()
+0349.         broker = newBroker
+0350.         messageHandler = handler
+0351.         return this
+0352.     }
+0353. 
+0354.     fun getInstance(): MQTTClient {
+0355.         return this
+0356.     }
+0357. 
+0358.     fun connect(): Boolean {
+0359.         return try {
+0360.             val clientId = MqttClient.generateClientId()
+0361.             mqttClient =
+0362.                 MqttClient("tcp://${broker?.serverUri}:${broker?.serverPort}", clientId, null)
+0363. 
+0364.             val options = MqttConnectOptions().apply {
+0365.                 userName = broker?.user
+0366.                 password = broker?.password?.toCharArray()
+0367.                 isAutomaticReconnect = true
+0368.                 isCleanSession = true
+0369.             }
+0370. 
+0371.             mqttClient?.connect(options)
+0372.             Log.i("MQTT", "✅ Подключение успешно!")
+0373.             true
+0374.         } catch (e: MqttException) {
+0375.             Log.e("MQTT", "Ошибка подключения: ${e.reasonCode} - ${e.message}")
+0376.             false
+0377.         }
+0378.     }
+0379. 
+0380.     fun subscribe(topic: String) {
+0381.         try {
+0382.             mqttClient?.setCallback(object : MqttCallback {
+0383.                 override fun connectionLost(cause: Throwable?) {
+0384.                     Log.e("MQTT", "Соединение потеряно: ${cause?.message}")
+0385.                 }
+0386. 
+0387.                 override fun messageArrived(topic: String, message: MqttMessage) {
+0388.                     val payload = message.toString()
+0389.                     Log.i("MQTT", "📩 Получено сообщение: $message на топик: $topic")
+0390. 
+0391.                     messageHandler?.handleMessage(topic, payload)
+0392.                 }
+0393. 
+0394.                 override fun deliveryComplete(token: IMqttDeliveryToken) {
+0395.                     Log.i("MQTT", "Сообщение отправлено")
+0396.                 }
+0397.             })
+0398. 
+0399.             mqttClient?.subscribe(topic)
+0400.             Log.i("MQTT", "📡 Подписался на $topic")
+0401.         } catch (e: MqttException) {
+0402.             Log.e("MQTT", "Ошибка подписки: ${e.reasonCode} - ${e.message}")
+0403.         }
+0404.     }
+0405. 
+0406.     fun publish(topic: String, payload: String, qos: Int = 1, retained: Boolean = false) {
+0407.         try {
+0408.             val message = MqttMessage(payload.toByteArray()).apply {
+0409.                 this.qos = qos
+0410.                 this.isRetained = retained
+0411.             }
+0412.             mqttClient?.publish(topic, message)
+0413.             Log.i("MQTT", "📤 Отправлено сообщение: $payload в топик: $topic")
+0414.         } catch (e: MqttException) {
+0415.             Log.e("MQTT", "Ошибка отправки сообщения: ${e.reasonCode} - ${e.message}")
+0416.         }
+0417.     }
+0418. 
+0419.     fun disconnect() {
+0420.         try {
+0421.             mqttClient?.disconnect()
+0422.             Log.i("MQTT", "🔌 Отключен от брокера")
+0423.         } catch (e: MqttException) {
+0424.             Log.e("MQTT", "Ошибка отключения: ${e.message}")
+0425.         }
+0426.     }
+0427. }
+
+
+MQTTMessageHandler.kt
+
+0428. package com.example.iot_ha.data.mqtt
+0429. 
+0430. import android.util.Log
+0431. import com.example.iot_ha.data.local.broker.BrokerState
+0432. import com.example.iot_ha.data.local.command.Command
+0433. import com.example.iot_ha.data.local.device.Device
+0434. import com.example.iot_ha.data.local.device.DeviceState
+0435. import com.example.iot_ha.ui.viewmodels.shared.DevicesViewModel
+0436. import com.example.iot_ha.ui.viewmodels.shared.SensorsViewModel
+0437. import org.json.JSONObject
+0438. 
+0439. class MQTTMessageHandler(
+0440.     private val sensorsViewModel: SensorsViewModel,
+0441.     private val devicesViewModel: DevicesViewModel,
+0442. ) {
+0443.     fun handleMessage(topic: String, payload: String) {
+0444.         Log.i("MQTTHandler", "📩 Обрабатываем сообщение: $payload с топика: $topic")
+0445. 
+0446.         when {
+0447.             topic.startsWith("zigbee/0x") -> handleDeviceStateMessage(topic, payload)
+0448.             topic.startsWith("homeassistant/") -> handleDeviceCommandMessage(topic, payload)
+0449.             topic.startsWith("devicelist") -> handleDeviceListMessage(payload)
+0450.             else -> Log.i("MQTTHandler", "⚠ Необрабатываемый топик: $topic")
+0451.         }
+0452.     }
+0453. 
+0454.     private fun handleDeviceStateMessage(topic: String, payload: String) {
+0455.         val ieeeAddr = extractIeeeAddrFromTopic(topic)
+0456.         val deviceId = devicesViewModel.devices.value.find { it.ieeeAddr == ieeeAddr }?.id
+0457. 
+0458.         if (deviceId != null) {
+0459.             DeviceState.updateDeviceData(deviceId, payload)
+0460.             Log.i("KAKASHKI", "PRESS")
+0461.             Log.i("STATE", DeviceState.devicesData.value.toString())
+0462. //            when (val value = DeviceState.getDeviceValue(deviceId, "power")) {
+0463. //                is String -> println("Значение - строка: $value")
+0464. //                is Int -> println("Значение - число: $value")
+0465. //                is Double -> println("Значение - дробное число: $value")
+0466. //                is Boolean -> println("Значение - булево: $value")
+0467. //                else -> println("Неизвестный тип: ${value?.javaClass}")
+0468. //            }
+0469. 
+0470.         } else {
+0471.             println("Устройство с IEEE Addr $ieeeAddr не найдено")
+0472.         }
+0473.     }
+0474. 
+0475. 
+0476.     private fun handleDeviceCommandMessage(topic: String, payload: String) {
+0477.         try {
+0478.             val jsonObject = JSONObject(payload)
+0479. 
+0480.             val commandTopic =
+0481.                 jsonObject.optString("command_topic").takeIf { it.isNotBlank() } ?: return
+0482.             val payloadOn = jsonObject.optString("payload_on", null)
+0483.             val payloadOff = jsonObject.optString("payload_off", null)
+0484.             val commandTemplate = jsonObject.optString("command_template", null)
+0485. 
+0486.             val options = jsonObject.optJSONArray("options")?.let { array ->
+0487.                 (0 until array.length()).associate { index ->
+0488.                     array.getString(index) to array.getString(
+0489.                         index
+0490.                     )
+0491.                 }
+0492.             } ?: emptyMap()
+0493. 
+0494.             val commandType = extractCommandTypeFromTopic(topic)
+0495.             val deviceIeeeAddr = extractIeeeAddrFromTopic(topic)
+0496. 
+0497.             if (deviceIeeeAddr != null && commandType != "unknown") {
+0498.                 devicesViewModel.getDeviceIdByIeeeAddr(deviceIeeeAddr) { deviceId ->
+0499.                     if (deviceId != null) {
+0500.                         val command = Command(
+0501.                             deviceId = deviceId,
+0502.                             commandTopic = commandTopic,
+0503.                             payloadOn = payloadOn,
+0504.                             payloadOff = payloadOff,
+0505.                             options = options,
+0506.                             commandTemplate = commandTemplate,
+0507.                             commandType = commandType
+0508.                         )
+0509. 
+0510.                         devicesViewModel.addCommandIfNotExists(command)
+0511.                         Log.i("MQTTHandler", "📥 Команда сохранена: $command")
+0512.                     } else {
+0513.                         Log.e("DeviceId", "Device not found for IEEE Address: $deviceIeeeAddr")
+0514.                     }
+0515.                 }
+0516.             }
+0517.         } catch (e: Exception) {
+0518.             Log.e("MQTTHandler", "Ошибка обработки команды: ${e.message}")
+0519.         }
+0520.     }
+0521. 
+0522.     private fun extractCommandTypeFromTopic(topic: String): String {
+0523.         return when {
+0524.             topic.contains("/switch/", ignoreCase = true) -> "switch"
+0525. //            topic.contains("/select/", ignoreCase = true) -> "select"
+0526. //            topic.contains("/light/", ignoreCase = true) -> "dimmer"
+0527.             else -> "unknown"
+0528.         }
+0529.     }
+0530. 
+0531.     private fun extractIeeeAddrFromTopic(topic: String): String? {
+0532.         val regex = Regex("0x[0-9A-Fa-f]+")
+0533.         return regex.find(topic)?.value
+0534.     }
+0535. 
+0536.     private fun handleDeviceListMessage(payload: String) {
+0537.         try {
+0538.             val jsonObject = JSONObject(payload)
+0539. 
+0540.             val key = jsonObject.keys().asSequence().firstOrNull() ?: "Нет данных"
+0541.             val deviceJson = jsonObject.optJSONObject(key) ?: JSONObject()
+0542. 
+0543.             val ieeeAddr = deviceJson.optString("ieeeAddr")
+0544.             val friendlyName = deviceJson.getString("friendly_name")
+0545.             val modelId = deviceJson.optString("ModelId")
+0546. 
+0547.             val device = Device.create(
+0548.                 ieeeAddr = ieeeAddr,
+0549.                 friendlyName = friendlyName,
+0550.                 modelId = modelId,
+0551.                 roomId = null,
+0552.                 brokerId = BrokerState.brokerId.value ?: -1
+0553.             )
+0554. 
+0555.             Log.i("DEVICE", "📥 Получено устройство: $device")
+0556. 
+0557.             devicesViewModel.addDeviceIfNotExists(device)
+0558. 
+0559.         } catch (e: Exception) {
+0560.             Log.e("DEVICE", "Ошибка обработки списка устройств: ${e.message}")
+0561.         }
+0562.     }
+0563. }
+0564. 
+
+
+BrokerInputForm.kt
+
+0565. package com.example.iot_ha.ui.components.broker
+0566. 
+0567. import androidx.compose.foundation.layout.Column
+0568. import androidx.compose.foundation.layout.Spacer
+0569. import androidx.compose.foundation.layout.fillMaxWidth
+0570. import androidx.compose.foundation.layout.height
+0571. import androidx.compose.foundation.shape.RoundedCornerShape
+0572. import androidx.compose.material3.Button
+0573. import androidx.compose.material3.ButtonDefaults
+0574. import androidx.compose.material3.MaterialTheme
+0575. import androidx.compose.material3.Text
+0576. import androidx.compose.runtime.Composable
+0577. import androidx.compose.ui.Modifier
+0578. import androidx.compose.ui.graphics.Color
+0579. import androidx.compose.ui.unit.dp
+0580. import com.example.iot_ha.ui.components.common.CustomOutlinedTextField
+0581. 
+0582. @Composable
+0583. fun BrokerInputForm(
+0584.     serverUri: String,
+0585.     serverPort: String,
+0586.     user: String,
+0587.     password: String,
+0588.     onServerUriChange: (String) -> Unit,
+0589.     onServerPortChange: (String) -> Unit,
+0590.     onUserChange: (String) -> Unit,
+0591.     onPasswordChange: (String) -> Unit,
+0592.     onAddBroker: () -> Unit
+0593. ) {
+0594.     Column(modifier = Modifier.fillMaxWidth()) {
+0595.         CustomOutlinedTextField(
+0596.             value = serverUri,
+0597.             label = "Server URI",
+0598.             onValueChange = onServerUriChange
+0599.         )
+0600.         CustomOutlinedTextField(
+0601.             value = serverPort,
+0602.             label = "Server Port",
+0603.             onValueChange = onServerPortChange
+0604.         )
+0605.         CustomOutlinedTextField(
+0606.             value = user,
+0607.             label = "User (optional)",
+0608.             onValueChange = onUserChange
+0609.         )
+0610.         CustomOutlinedTextField(
+0611.             value = password,
+0612.             label = "Password (optional)",
+0613.             onValueChange = onPasswordChange
+0614.         )
+0615. 
+0616.         Spacer(modifier = Modifier.height(12.dp))
+0617. 
+0618.         Button(
+0619.             onClick = onAddBroker,
+0620.             modifier = Modifier.fillMaxWidth(),
+0621.             shape = RoundedCornerShape(12.dp),
+0622.             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+0623.         ) {
+0624.             Text("Добавить брокера", color = Color.White)
+0625.         }
+0626.     }
+0627. }
+
+
+BrokerItem.kt
+
+0628. package com.example.iot_ha.ui.components.broker
+0629. 
+0630. import androidx.compose.foundation.layout.Arrangement
+0631. import androidx.compose.foundation.layout.Column
+0632. import androidx.compose.foundation.layout.Row
+0633. import androidx.compose.foundation.layout.Spacer
+0634. import androidx.compose.foundation.layout.fillMaxWidth
+0635. import androidx.compose.foundation.layout.height
+0636. import androidx.compose.foundation.layout.padding
+0637. import androidx.compose.foundation.layout.width
+0638. import androidx.compose.foundation.shape.RoundedCornerShape
+0639. import androidx.compose.material3.Button
+0640. import androidx.compose.material3.ButtonDefaults
+0641. import androidx.compose.material3.Card
+0642. import androidx.compose.material3.CardDefaults
+0643. import androidx.compose.material3.MaterialTheme
+0644. import androidx.compose.material3.OutlinedButton
+0645. import androidx.compose.material3.Text
+0646. import androidx.compose.runtime.Composable
+0647. import androidx.compose.ui.Modifier
+0648. import androidx.compose.ui.draw.shadow
+0649. import androidx.compose.ui.graphics.Color
+0650. import androidx.compose.ui.unit.dp
+0651. import com.example.iot_ha.data.local.broker.Broker
+0652. 
+0653. @Composable
+0654. fun BrokerItem(broker: Broker, onDelete: () -> Unit, onLogin: () -> Unit) {
+0655.     Card(
+0656.         modifier = Modifier
+0657.             .fillMaxWidth()
+0658.             .padding(6.dp)
+0659.             .shadow(4.dp, shape = RoundedCornerShape(12.dp)),
+0660.         elevation = CardDefaults.elevatedCardElevation(8.dp)
+0661.     ) {
+0662.         Column(modifier = Modifier.padding(12.dp)) {
+0663.             Text(text = "URI: ${broker.serverUri}", style = MaterialTheme.typography.bodyLarge)
+0664.             Text(text = "Port: ${broker.serverPort}", style = MaterialTheme.typography.bodyMedium)
+0665.             broker.user?.let {
+0666.                 Text(
+0667.                     text = "User: $it",
+0668.                     style = MaterialTheme.typography.bodyMedium
+0669.                 )
+0670.             }
+0671.             broker.password?.let {
+0672.                 Text(
+0673.                     text = "Password: ${"*".repeat(it.length)}",
+0674.                     style = MaterialTheme.typography.bodyMedium
+0675.                 )
+0676.             }
+0677. 
+0678.             Spacer(modifier = Modifier.height(8.dp))
+0679. 
+0680.             Row(
+0681.                 modifier = Modifier.fillMaxWidth(),
+0682.                 horizontalArrangement = Arrangement.SpaceBetween
+0683.             ) {
+0684.                 Button(
+0685.                     onClick = onLogin,
+0686.                     modifier = Modifier.weight(1f),
+0687.                     shape = RoundedCornerShape(12.dp),
+0688.                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+0689.                 ) {
+0690.                     Text("Войти", color = Color.White)
+0691.                 }
+0692.                 Spacer(modifier = Modifier.width(6.dp))
+0693.                 OutlinedButton(
+0694.                     onClick = onDelete,
+0695.                     modifier = Modifier.weight(1f),
+0696.                     shape = RoundedCornerShape(12.dp),
+0697.                     colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+0698.                 ) {
+0699.                     Text("Удалить")
+0700.                 }
+0701.             }
+0702.         }
+0703.     }
+0704. }
+
+
+BrokerList.kt
+
+0705. package com.example.iot_ha.ui.components.broker
+0706. 
+0707. 
+0708. import androidx.compose.foundation.layout.Spacer
+0709. import androidx.compose.foundation.layout.height
+0710. import androidx.compose.material3.MaterialTheme
+0711. import androidx.compose.material3.Text
+0712. import androidx.compose.runtime.Composable
+0713. import androidx.compose.ui.Modifier
+0714. import androidx.compose.ui.unit.dp
+0715. import com.example.iot_ha.data.local.broker.Broker
+0716. 
+0717. @Composable
+0718. fun BrokerList(
+0719.     brokers: List<Broker>,
+0720.     onDelete: (Broker) -> Unit,
+0721.     onLogin: (Broker) -> Unit
+0722. ) {
+0723.     brokers.lastOrNull()?.let { broker ->
+0724.         Text("Последний сохранённый брокер:", style = MaterialTheme.typography.labelMedium)
+0725.         Spacer(modifier = Modifier.height(1.dp))
+0726.         BrokerItem(
+0727.             broker = broker,
+0728.             onDelete = { onDelete(broker) },
+0729.             onLogin = { onLogin(broker) }
+0730.         )
+0731.     }
+0732. }
+
+CustomOutlinedTextField.kt
+
+0733. package com.example.iot_ha.ui.components.common
+0734. 
+0735. import androidx.compose.foundation.layout.Spacer
+0736. import androidx.compose.foundation.layout.fillMaxWidth
+0737. import androidx.compose.foundation.layout.height
+0738. import androidx.compose.foundation.shape.RoundedCornerShape
+0739. import androidx.compose.material3.OutlinedTextField
+0740. import androidx.compose.material3.Text
+0741. import androidx.compose.runtime.Composable
+0742. import androidx.compose.ui.Modifier
+0743. import androidx.compose.ui.unit.dp
+0744. 
+0745. @Composable
+0746. fun CustomOutlinedTextField(
+0747.     value: String,
+0748.     label: String,
+0749.     onValueChange: (String) -> Unit,
+0750. ) {
+0751.     OutlinedTextField(
+0752.         value = value,
+0753.         onValueChange = onValueChange,
+0754.         label = { Text(label) },
+0755.         shape = RoundedCornerShape(12.dp),
+0756.         modifier = Modifier.fillMaxWidth()
+0757.     )
+0758.     Spacer(modifier = Modifier.height(8.dp))
+0759. }
+
+
+TabButton.kt
+
+0760. package com.example.iot_ha.ui.components.common
+0761. 
+0762. import androidx.compose.foundation.BorderStroke
+0763. import androidx.compose.foundation.clickable
+0764. import androidx.compose.foundation.layout.Arrangement
+0765. import androidx.compose.foundation.layout.Row
+0766. import androidx.compose.foundation.layout.height
+0767. import androidx.compose.foundation.layout.padding
+0768. import androidx.compose.foundation.shape.RoundedCornerShape
+0769. import androidx.compose.material3.MaterialTheme
+0770. import androidx.compose.material3.Surface
+0771. import androidx.compose.material3.Text
+0772. import androidx.compose.runtime.Composable
+0773. import androidx.compose.ui.Alignment
+0774. import androidx.compose.ui.Modifier
+0775. import androidx.compose.ui.draw.clip
+0776. import androidx.compose.ui.graphics.Color
+0777. import androidx.compose.ui.text.font.FontWeight
+0778. import androidx.compose.ui.unit.dp
+0779. 
+0780. @Composable
+0781. fun TabButton(title: String, isSelected: Boolean, onClick: () -> Unit) {
+0782.     val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
+0783.     val textColor = Color.Black
+0784.     Surface(
+0785.         modifier = Modifier
+0786.             .padding(horizontal = 4.dp, vertical = 4.dp)
+0787.             .height(40.dp)
+0788.             .clip(RoundedCornerShape(8.dp))
+0789.             .clickable { onClick() },
+0790.         color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else Color.Transparent,
+0791.         shape = RoundedCornerShape(8.dp),
+0792.         border = BorderStroke(if (isSelected) 2.dp else 0.dp, borderColor)
+0793.     ) {
+0794.         Row(
+0795.             modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+0796.             verticalAlignment = Alignment.CenterVertically,
+0797.             horizontalArrangement = Arrangement.Center
+0798.         ) {
+0799.             Text(
+0800.                 text = title,
+0801.                 color = textColor,
+0802.                 style = MaterialTheme.typography.labelLarge,
+0803.                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+0804.             )
+0805.         }
+0806.     }
+0807. }
+
+DeviceCard.kt
+
+0808. package com.example.iot_ha.ui.components.devices
+0809. 
+0810. import androidx.compose.foundation.Image
+0811. import androidx.compose.foundation.clickable
+0812. import androidx.compose.foundation.layout.Column
+0813. import androidx.compose.foundation.layout.Row
+0814. import androidx.compose.foundation.layout.Spacer
+0815. import androidx.compose.foundation.layout.fillMaxWidth
+0816. import androidx.compose.foundation.layout.padding
+0817. import androidx.compose.foundation.layout.size
+0818. import androidx.compose.foundation.layout.width
+0819. import androidx.compose.foundation.shape.RoundedCornerShape
+0820. import androidx.compose.material3.Card
+0821. import androidx.compose.material3.CardDefaults
+0822. import androidx.compose.material3.DropdownMenuItem
+0823. import androidx.compose.material3.ExperimentalMaterial3Api
+0824. import androidx.compose.material3.ExposedDropdownMenuBox
+0825. import androidx.compose.material3.ExposedDropdownMenuDefaults
+0826. import androidx.compose.material3.Slider
+0827. import androidx.compose.material3.SliderDefaults
+0828. import androidx.compose.material3.Switch
+0829. import androidx.compose.material3.SwitchDefaults
+0830. import androidx.compose.material3.Text
+0831. import androidx.compose.material3.TextField
+0832. import androidx.compose.runtime.Composable
+0833. import androidx.compose.runtime.getValue
+0834. import androidx.compose.runtime.mutableFloatStateOf
+0835. import androidx.compose.runtime.mutableStateOf
+0836. import androidx.compose.runtime.remember
+0837. import androidx.compose.runtime.setValue
+0838. import androidx.compose.ui.Alignment
+0839. import androidx.compose.ui.Modifier
+0840. import androidx.compose.ui.draw.clip
+0841. import androidx.compose.ui.graphics.Color
+0842. import androidx.compose.ui.res.painterResource
+0843. import androidx.compose.ui.text.font.FontWeight
+0844. import androidx.compose.ui.unit.dp
+0845. import androidx.compose.ui.unit.sp
+0846. import androidx.navigation.NavHostController
+0847. 
+0848. @OptIn(ExperimentalMaterial3Api::class)
+0849. @Composable
+0850. fun DeviceCard(
+0851.     deviceId: Int,
+0852.     imageRes: Int,
+0853.     name: String,
+0854.     type: String,
+0855.     value: Any,
+0856.     navController: NavHostController,
+0857.     onToggle: ((Boolean) -> Unit)? = null,
+0858.     onSliderChange: ((Float) -> Unit)? = null,
+0859.     onSelectChange: ((String) -> Unit)? = null,
+0860.     options: List<String> = emptyList()
+0861. ) {
+0862.     var checked by remember { mutableStateOf(value as? Boolean ?: false) }
+0863.     var sliderValue by remember { mutableFloatStateOf(value as? Float ?: 0f) }
+0864.     var selectedOption by remember {
+0865.         mutableStateOf(
+0866.             value as? String ?: options.firstOrNull().orEmpty()
+0867.         )
+0868.     }
+0869.     var expanded by remember { mutableStateOf(false) }
+0870. 
+0871.     Card(
+0872.         shape = RoundedCornerShape(16.dp),
+0873.         modifier = Modifier
+0874.             .fillMaxWidth()
+0875.             .padding(8.dp)
+0876.             .clickable { navController.navigate("device_details/$deviceId") },
+0877.         elevation = CardDefaults.cardElevation(6.dp)
+0878.     ) {
+0879.         Row(
+0880.             verticalAlignment = Alignment.CenterVertically,
+0881.             modifier = Modifier.padding(16.dp)
+0882.         ) {
+0883.             Image(
+0884.                 painter = painterResource(id = imageRes),
+0885.                 contentDescription = name,
+0886.                 modifier = Modifier
+0887.                     .size(64.dp)
+0888.                     .clip(RoundedCornerShape(12.dp))
+0889.             )
+0890.             Spacer(modifier = Modifier.width(16.dp))
+0891.             Column(modifier = Modifier.weight(1f)) {
+0892.                 Text(
+0893.                     text = name,
+0894.                     fontSize = 20.sp,
+0895.                     fontWeight = FontWeight.Bold,
+0896.                     color = Color.Black
+0897.                 )
+0898.                 when (type) {
+0899.                     "switch" -> {
+0900.                         Switch(
+0901.                             checked = checked,
+0902.                             onCheckedChange = {
+0903.                                 checked = it
+0904.                                 onToggle?.invoke(it)
+0905.                             },
+0906.                             colors = SwitchDefaults.colors(
+0907.                                 checkedThumbColor = Color.White,
+0908.                                 checkedTrackColor = Color(0xFF4CAF50),
+0909.                                 uncheckedThumbColor = Color.White,
+0910.                                 uncheckedTrackColor = Color(0xFFF44336)
+0911.                             )
+0912.                         )
+0913.                     }
+0914. 
+0915.                     "slider" -> {
+0916.                         Slider(
+0917.                             value = sliderValue,
+0918.                             onValueChange = {
+0919.                                 sliderValue = it
+0920.                                 onSliderChange?.invoke(it)
+0921.                             },
+0922.                             valueRange = 0f..100f,
+0923.                             colors = SliderDefaults.colors(
+0924.                                 thumbColor = Color(0xFF8A9F9B),
+0925.                                 activeTrackColor = Color(0xFFA6B6A9)
+0926.                             )
+0927.                         )
+0928.                     }
+0929. 
+0930.                     "select" -> {
+0931.                         ExposedDropdownMenuBox(
+0932.                             expanded = expanded,
+0933.                             onExpandedChange = { expanded = it }
+0934.                         ) {
+0935.                             TextField(
+0936.                                 value = selectedOption,
+0937.                                 onValueChange = {},
+0938.                                 readOnly = true,
+0939.                                 modifier = Modifier.menuAnchor(),
+0940.                                 label = { Text("Выберите") },
+0941.                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }
+0942.                             )
+0943.                             ExposedDropdownMenu(
+0944.                                 expanded = expanded,
+0945.                                 onDismissRequest = { expanded = false }
+0946.                             ) {
+0947.                                 options.forEach { option ->
+0948.                                     DropdownMenuItem(
+0949.                                         text = { Text(option) },
+0950.                                         onClick = {
+0951.                                             selectedOption = option
+0952.                                             expanded = false
+0953.                                             onSelectChange?.invoke(option)
+0954.                                         }
+0955.                                     )
+0956.                                 }
+0957.                             }
+0958.                         }
+0959.                     }
+0960. 
+0961.                     else -> {
+0962.                         Text(text = value.toString(), fontSize = 14.sp, color = Color.Black)
+0963.                     }
+0964.                 }
+0965.             }
+0966.         }
+0967.     }
+0968. }
+
+
+DeviceDetails.kt
+
+0969. package com.example.iot_ha.ui.components.devices
+0970. 
+0971. import androidx.compose.foundation.background
+0972. import androidx.compose.foundation.layout.Box
+0973. import androidx.compose.foundation.layout.Column
+0974. import androidx.compose.foundation.layout.fillMaxWidth
+0975. import androidx.compose.foundation.layout.padding
+0976. import androidx.compose.foundation.shape.RoundedCornerShape
+0977. import androidx.compose.material3.MaterialTheme
+0978. import androidx.compose.material3.Text
+0979. import androidx.compose.runtime.Composable
+0980. import androidx.compose.ui.Modifier
+0981. import androidx.compose.ui.draw.clip
+0982. import androidx.compose.ui.unit.dp
+0983. import androidx.compose.ui.unit.sp
+0984. 
+0985. @Composable
+0986. fun DeviceDetails(deviceData: Map<String, Any>) {
+0987.     Column(modifier = Modifier.fillMaxWidth()) {
+0988.         deviceData.forEach { (key, value) ->
+0989.             Box(
+0990.                 modifier = Modifier
+0991.                     .fillMaxWidth()
+0992.                     .padding(vertical = 4.dp)
+0993.                     .clip(RoundedCornerShape(12.dp))
+0994.                     .background(MaterialTheme.colorScheme.surfaceVariant)
+0995.                     .padding(12.dp)
+0996.             ) {
+0997.                 Text(
+0998.                     text = "$key: $value",
+0999.                     style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
+1000.                     color = MaterialTheme.colorScheme.onSurfaceVariant
+1001.                 )
+1002.             }
+1003.         }
+1004.     }
+1005. }
+
+DeviceNotFound.kt
+
+1006. package com.example.iot_ha.ui.components.devices
+1007. 
+1008. import androidx.compose.foundation.layout.Box
+1009. import androidx.compose.foundation.layout.fillMaxSize
+1010. import androidx.compose.material3.MaterialTheme
+1011. import androidx.compose.material3.Text
+1012. import androidx.compose.runtime.Composable
+1013. import androidx.compose.ui.Alignment
+1014. import androidx.compose.ui.Modifier
+1015. 
+1016. @Composable
+1017. fun DeviceNotFoundMessage() {
+1018.     Box(
+1019.         modifier = Modifier.fillMaxSize(),
+1020.         contentAlignment = Alignment.Center
+1021.     ) {
+1022.         Text(
+1023.             text = "Device not found",
+1024.             style = MaterialTheme.typography.bodyLarge,
+1025.             color = MaterialTheme.colorScheme.error
+1026.         )
+1027.     }
+1028. }
+
+DeviceTitle.kt
+
+1029. package com.example.iot_ha.ui.components.devices
+1030. 
+1031. import androidx.compose.foundation.layout.padding
+1032. import androidx.compose.foundation.layout.statusBarsPadding
+1033. import androidx.compose.material3.MaterialTheme
+1034. import androidx.compose.material3.Text
+1035. import androidx.compose.runtime.Composable
+1036. import androidx.compose.ui.Modifier
+1037. import androidx.compose.ui.unit.dp
+1038. 
+1039. @Composable
+1040. fun DeviceTitle(friendlyName: String) {
+1041.     Text(
+1042.         text = friendlyName,
+1043.         style = MaterialTheme.typography.titleLarge,
+1044.         color = MaterialTheme.colorScheme.primary,
+1045.         modifier = Modifier
+1046.             .statusBarsPadding()
+1047.             .padding(vertical = 16.dp)
+1048.     )
+1049. }
+
+AppNavHost.kt
+
+1050. package com.example.iot_ha.ui.navigation
+1051. 
+1052. import androidx.compose.runtime.Composable
+1053. import androidx.compose.ui.platform.LocalContext
+1054. import androidx.lifecycle.viewmodel.compose.viewModel
+1055. import androidx.navigation.NavHostController
+1056. import androidx.navigation.compose.NavHost
+1057. import androidx.navigation.compose.composable
+1058. import com.example.iot_ha.data.local.RoomLocalDatabase
+1059. import com.example.iot_ha.ui.screens.AuthorizationScreen
+1060. import com.example.iot_ha.ui.screens.HomeScreen
+1061. import com.example.iot_ha.ui.screens.home.DeviceDetailScreen
+1062. import com.example.iot_ha.ui.viewmodels.factory.DevicesViewModelFactory
+1063. import com.example.iot_ha.ui.viewmodels.factory.SensorsViewModelFactory
+1064. import com.example.iot_ha.ui.viewmodels.shared.DevicesViewModel
+1065. import com.example.iot_ha.ui.viewmodels.shared.SensorsViewModel
+1066. 
+1067. @Composable
+1068. fun AppNavHost(
+1069.     navController: NavHostController,
+1070.     startDestination: String
+1071. ) {
+1072.     val db = RoomLocalDatabase.getInstance(LocalContext.current)
+1073. 
+1074.     val sensorsViewModel: SensorsViewModel = viewModel(factory = SensorsViewModelFactory())
+1075.     val devicesViewModel: DevicesViewModel = viewModel(factory = DevicesViewModelFactory(db))
+1076. 
+1077.     NavHost(navController = navController, startDestination = startDestination) {
+1078.         composable(Routes.AUTH_SCREEN) {
+1079.             AuthorizationScreen(
+1080.                 navHostController = navController,
+1081.                 sensorsViewModel = sensorsViewModel,
+1082.                 devicesViewModel = devicesViewModel
+1083.             )
+1084.         }
+1085. 
+1086.         composable(Routes.HOME_SCREEN) {
+1087.             HomeScreen(
+1088.                 navHostController = navController,
+1089.                 devicesViewModel = devicesViewModel
+1090.             )
+1091.         }
+1092. 
+1093.         composable(Routes.DEVICE_DETAILS_SCREEN) { backStackEntry ->
+1094.             DeviceDetailScreen(
+1095.                 backStackEntry = backStackEntry,
+1096.                 devicesViewModel = devicesViewModel,
+1097.             )
+1098.         }
+1099.     }
+1100. }
+1101. 
+
+
+Routes.kt
+
+1102. package com.example.iot_ha.ui.navigation
+1103. 
+1104. object Routes {
+1105.     const val AUTH_SCREEN = "auth"
+1106.     const val HOME_SCREEN = "home"
+1107. 
+1108.     const val DEVICE_DETAILS_SCREEN = "device_details/{deviceId}"
+1109. }
+
+AuthorizationScreen.kt
+
+1110. package com.example.iot_ha.ui.screens
+1111. 
+1112. import androidx.compose.foundation.Image
+1113. import androidx.compose.foundation.layout.Column
+1114. import androidx.compose.foundation.layout.Spacer
+1115. import androidx.compose.foundation.layout.aspectRatio
+1116. import androidx.compose.foundation.layout.fillMaxSize
+1117. import androidx.compose.foundation.layout.fillMaxWidth
+1118. import androidx.compose.foundation.layout.height
+1119. import androidx.compose.foundation.layout.padding
+1120. import androidx.compose.foundation.shape.RoundedCornerShape
+1121. import androidx.compose.runtime.Composable
+1122. import androidx.compose.runtime.getValue
+1123. import androidx.compose.runtime.mutableStateOf
+1124. import androidx.compose.runtime.remember
+1125. import androidx.compose.runtime.setValue
+1126. import androidx.compose.ui.Alignment
+1127. import androidx.compose.ui.Modifier
+1128. import androidx.compose.ui.draw.clip
+1129. import androidx.compose.ui.platform.LocalContext
+1130. import androidx.compose.ui.res.painterResource
+1131. import androidx.compose.ui.unit.dp
+1132. import androidx.lifecycle.viewmodel.compose.viewModel
+1133. import androidx.navigation.NavHostController
+1134. import com.example.iot_ha.R
+1135. import com.example.iot_ha.data.local.RoomLocalDatabase
+1136. import com.example.iot_ha.data.local.broker.Broker
+1137. import com.example.iot_ha.data.local.broker.BrokerState
+1138. import com.example.iot_ha.data.mqtt.MQTTClient
+1139. import com.example.iot_ha.data.mqtt.MQTTMessageHandler
+1140. import com.example.iot_ha.ui.components.broker.BrokerInputForm
+1141. import com.example.iot_ha.ui.components.broker.BrokerList
+1142. import com.example.iot_ha.ui.viewmodels.AuthorizationViewModel
+1143. import com.example.iot_ha.ui.viewmodels.factory.AuthorizationViewModelFactory
+1144. import com.example.iot_ha.ui.viewmodels.shared.DevicesViewModel
+1145. import com.example.iot_ha.ui.viewmodels.shared.SensorsViewModel
+1146. import kotlinx.coroutines.CoroutineScope
+1147. import kotlinx.coroutines.Dispatchers
+1148. import kotlinx.coroutines.delay
+1149. import kotlinx.coroutines.launch
+1150. 
+1151. @Composable
+1152. fun AuthorizationScreen(
+1153.     navHostController: NavHostController,
+1154.     sensorsViewModel: SensorsViewModel,
+1155.     devicesViewModel: DevicesViewModel
+1156. ) {
+1157.     var serverUri by remember { mutableStateOf("") }
+1158.     var serverPort by remember { mutableStateOf("") }
+1159.     var user by remember { mutableStateOf("") }
+1160.     var password by remember { mutableStateOf("") }
+1161. 
+1162.     val db = RoomLocalDatabase.getInstance(LocalContext.current)
+1163.     val authorizationViewModel: AuthorizationViewModel =
+1164.         viewModel(factory = (AuthorizationViewModelFactory(db)))
+1165. 
+1166.     val brokers = authorizationViewModel.brokers.value
+1167. 
+1168.     val messageHandler = remember { MQTTMessageHandler(sensorsViewModel, devicesViewModel) }
+1169. 
+1170.     fun handleLogin(
+1171.         broker: Broker,
+1172.         messageHandler: MQTTMessageHandler,
+1173.         navHostController: NavHostController
+1174.     ) {
+1175.         BrokerState.setBrokerId(broker.id)
+1176. 
+1177.         val mqttClient = MQTTClient.reinitialize(broker, messageHandler)
+1178.         val isSuccess = mqttClient.connect()
+1179.         if (isSuccess) {
+1180.             navHostController.navigate("home")
+1181. 
+1182.             CoroutineScope(Dispatchers.IO).launch {
+1183.                 mqttClient.subscribe("devicelist")
+1184.                 delay(500) // todo: fix (если получится), хз не фикситься, не успевает обработать
+1185.                 mqttClient.subscribe("homeassistant/#")
+1186.                 mqttClient.subscribe("zigbee/#")
+1187.             }
+1188.         }
+1189.     }
+1190. 
+1191.     fun handleDelete(broker: Broker, authorizationViewModel: AuthorizationViewModel) {
+1192.         val mqttClient = MQTTClient.getInstance()
+1193.         mqttClient.disconnect()
+1194.         authorizationViewModel.deleteBroker(broker)
+1195.     }
+1196. 
+1197.     fun handleAddBroker(
+1198.         serverUri: String,
+1199.         serverPort: String,
+1200.         user: String,
+1201.         password: String,
+1202.         onClearFields: () -> Unit,
+1203.         authorizationViewModel: AuthorizationViewModel
+1204.     ) {
+1205.         if (serverUri.isNotBlank() && serverPort.isNotBlank()) {
+1206.             authorizationViewModel.addBroker(
+1207.                 serverUri,
+1208.                 serverPort.toIntOrNull() ?: 1883,
+1209.                 user.takeIf { it.isNotBlank() },
+1210.                 password.takeIf { it.isNotBlank() }
+1211.             )
+1212.             onClearFields()
+1213.         }
+1214.     }
+1215. 
+1216.     Column(
+1217.         modifier = Modifier
+1218.             .fillMaxSize()
+1219.             .padding(horizontal = 16.dp),
+1220.         horizontalAlignment = Alignment.CenterHorizontally
+1221.     ) {
+1222.         Spacer(modifier = Modifier.height(40.dp))
+1223. 
+1224.         Image(
+1225.             painter = painterResource(id = R.drawable.mqtt_logo),
+1226.             contentDescription = "Broker Logo",
+1227.             modifier = Modifier
+1228.                 .fillMaxWidth()
+1229.                 .padding(horizontal = 16.dp)
+1230.                 .aspectRatio(4f)
+1231.                 .clip(RoundedCornerShape(12.dp)),
+1232.         )
+1233. 
+1234.         Spacer(modifier = Modifier.height(50.dp))
+1235. 
+1236.         BrokerInputForm(
+1237.             serverUri = serverUri,
+1238.             serverPort = serverPort,
+1239.             user = user,
+1240.             password = password,
+1241.             onServerUriChange = { serverUri = it },
+1242.             onServerPortChange = { serverPort = it },
+1243.             onUserChange = { user = it },
+1244.             onPasswordChange = { password = it },
+1245.             onAddBroker = {
+1246.                 handleAddBroker(
+1247.                     serverUri,
+1248.                     serverPort,
+1249.                     user,
+1250.                     password,
+1251.                     onClearFields = {
+1252.                         serverUri = ""
+1253.                         serverPort = ""
+1254.                         user = ""
+1255.                         password = ""
+1256.                     },
+1257.                     authorizationViewModel
+1258.                 )
+1259.             }
+1260.         )
+1261. 
+1262.         Spacer(modifier = Modifier.height(16.dp))
+1263. 
+1264.         BrokerList(
+1265.             brokers = brokers,
+1266.             onDelete = { handleDelete(it, authorizationViewModel) },
+1267.             onLogin = { handleLogin(it, messageHandler, navHostController) }
+1268.         )
+1269.     }
+1270. }
+
+HomeScreen.kt
+
+1271. package com.example.iot_ha.ui.screens
+1272. 
+1273. import androidx.compose.foundation.background
+1274. import androidx.compose.foundation.layout.Arrangement
+1275. import androidx.compose.foundation.layout.Column
+1276. import androidx.compose.foundation.layout.PaddingValues
+1277. import androidx.compose.foundation.layout.Spacer
+1278. import androidx.compose.foundation.layout.fillMaxSize
+1279. import androidx.compose.foundation.layout.fillMaxWidth
+1280. import androidx.compose.foundation.layout.height
+1281. import androidx.compose.foundation.layout.padding
+1282. import androidx.compose.foundation.layout.statusBarsPadding
+1283. import androidx.compose.foundation.lazy.LazyRow
+1284. import androidx.compose.foundation.lazy.itemsIndexed
+1285. import androidx.compose.runtime.Composable
+1286. import androidx.compose.runtime.getValue
+1287. import androidx.compose.runtime.mutableIntStateOf
+1288. import androidx.compose.runtime.remember
+1289. import androidx.compose.runtime.setValue
+1290. import androidx.compose.ui.Modifier
+1291. import androidx.compose.ui.graphics.Color
+1292. import androidx.compose.ui.platform.LocalContext
+1293. import androidx.compose.ui.unit.dp
+1294. import androidx.navigation.NavHostController
+1295. import com.example.iot_ha.data.local.RoomLocalDatabase
+1296. import com.example.iot_ha.ui.components.common.TabButton
+1297. import com.example.iot_ha.ui.screens.home.DevicesScreen
+1298. import com.example.iot_ha.ui.screens.home.com.example.iot_ha.ui.screens.home.RoomsScreen
+1299. import com.example.iot_ha.ui.screens.home.SettingsScreen
+1300. import com.example.iot_ha.ui.viewmodels.shared.DevicesViewModel
+1301. import com.example.iot_ha.utils.Constants
+1302. 
+1303. @Composable
+1304. fun HomeScreen(navHostController: NavHostController, devicesViewModel: DevicesViewModel) {
+1305.     var selectedTab by remember { mutableIntStateOf(0) }
+1306. 
+1307.     val db = RoomLocalDatabase.getInstance(LocalContext.current)
+1308. //    val viewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory(db))
+1309. 
+1310. 
+1311.     Column(
+1312.         modifier = Modifier
+1313.             .fillMaxSize()
+1314.             .statusBarsPadding()
+1315.             .background(Color.White)
+1316.     ) {
+1317.         LazyRow(
+1318.             modifier = Modifier
+1319.                 .fillMaxWidth()
+1320.                 .padding(vertical = 12.dp, horizontal = 8.dp),
+1321.             contentPadding = PaddingValues(horizontal = 8.dp),
+1322.             horizontalArrangement = Arrangement.spacedBy(8.dp)
+1323.         ) {
+1324.             itemsIndexed(Constants.TABS_LIST) { index, title ->
+1325.                 TabButton(
+1326.                     title = title,
+1327.                     isSelected = selectedTab == index,
+1328.                     onClick = { selectedTab = index }
+1329.                 )
+1330.             }
+1331.         }
+1332. 
+1333.         Spacer(modifier = Modifier.height(8.dp))
+1334. 
+1335.         when (selectedTab) {
+1336.             0 -> DevicesScreen(
+1337.                 navHostController = navHostController,
+1338.                 devicesViewModel = devicesViewModel
+1339.             )
+1340. 
+1341.             1 -> com.example.iot_ha.ui.screens.home.RoomsScreen()
+1342.             2 -> SettingsScreen()
+1343.         }
+1344.     }
+1345. }
+1346. 
+1347. 
+1348. 
+1349. 
+1350. 
+1351. 
+
+
+DeviceDetailScreen.kt
+
+1352. package com.example.iot_ha.ui.screens.home
+1353. 
+1354. import androidx.compose.foundation.layout.Column
+1355. import androidx.compose.foundation.layout.Spacer
+1356. import androidx.compose.foundation.layout.fillMaxSize
+1357. import androidx.compose.foundation.layout.height
+1358. import androidx.compose.foundation.layout.padding
+1359. import androidx.compose.material3.MaterialTheme
+1360. import androidx.compose.material3.Surface
+1361. import androidx.compose.runtime.Composable
+1362. import androidx.compose.runtime.collectAsState
+1363. import androidx.compose.runtime.getValue
+1364. import androidx.compose.ui.Alignment
+1365. import androidx.compose.ui.Modifier
+1366. import androidx.compose.ui.unit.dp
+1367. import androidx.navigation.NavBackStackEntry
+1368. import com.example.iot_ha.data.local.device.DeviceState
+1369. import com.example.iot_ha.ui.components.devices.DeviceDetails
+1370. import com.example.iot_ha.ui.components.devices.DeviceNotFoundMessage
+1371. import com.example.iot_ha.ui.components.devices.DeviceTitle
+1372. import com.example.iot_ha.ui.viewmodels.shared.DevicesViewModel
+1373. 
+1374. @Composable
+1375. fun DeviceDetailScreen(backStackEntry: NavBackStackEntry, devicesViewModel: DevicesViewModel) {
+1376.     val deviceId = backStackEntry.arguments?.getString("deviceId")?.toIntOrNull() ?: -1
+1377. 
+1378.     val devices by devicesViewModel.devices.collectAsState()
+1379. 
+1380.     val deviceState by DeviceState.devicesData.collectAsState()
+1381.     val deviceData = deviceState[deviceId]
+1382. 
+1383.     Surface(
+1384.         modifier = Modifier
+1385.             .fillMaxSize()
+1386.             .padding(16.dp),
+1387.         color = MaterialTheme.colorScheme.background
+1388.     ) {
+1389.         Column(
+1390.             modifier = Modifier.fillMaxSize(),
+1391.             horizontalAlignment = Alignment.CenterHorizontally
+1392.         ) {
+1393.             DeviceTitle(friendlyName = devices.find { it.id == deviceId }?.friendlyName ?: "Unknown Device")
+1394. 
+1395.             Spacer(modifier = Modifier.height(8.dp))
+1396. 
+1397.             if (deviceData != null) {
+1398.                 DeviceDetails(deviceData)
+1399.             } else {
+1400.                 DeviceNotFoundMessage()
+1401.             }
+1402.         }
+1403.     }
+1404. }
+1405. 
+1406. 
+
+
+DevicesScreen.kt
+
+1407. package com.example.iot_ha.ui.screens.home
+1408. 
+1409. import androidx.compose.foundation.layout.Column
+1410. import androidx.compose.foundation.layout.Spacer
+1411. import androidx.compose.foundation.layout.fillMaxSize
+1412. import androidx.compose.foundation.layout.height
+1413. import androidx.compose.foundation.layout.padding
+1414. import androidx.compose.foundation.rememberScrollState
+1415. import androidx.compose.foundation.verticalScroll
+1416. import androidx.compose.material3.Scaffold
+1417. import androidx.compose.runtime.Composable
+1418. import androidx.compose.runtime.collectAsState
+1419. import androidx.compose.runtime.getValue
+1420. import androidx.compose.ui.Modifier
+1421. import androidx.compose.ui.unit.dp
+1422. import androidx.navigation.NavHostController
+1423. import com.example.iot_ha.R
+1424. import com.example.iot_ha.data.local.device.DeviceState
+1425. import com.example.iot_ha.ui.components.devices.DeviceCard
+1426. import com.example.iot_ha.ui.viewmodels.shared.DevicesViewModel
+1427. import com.example.iot_ha.utils.Constants
+1428. import com.example.iot_ha.utils.toBooleanState
+1429. 
+1430. @Composable
+1431. fun DevicesScreen(navHostController: NavHostController, devicesViewModel: DevicesViewModel) {
+1432. 
+1433.     val devices by devicesViewModel.devices.collectAsState()
+1434.     val switchDevices by devicesViewModel.getDevicesByTypeFlow("switch").collectAsState()
+1435.     val deviceState by DeviceState.devicesData.collectAsState()
+1436. 
+1437. 
+1438. //    val predefinedSelectDevice = remember {
+1439. //        object {
+1440. //            val id = -1
+1441. //            val friendlyName = "Выбор режима"
+1442. //            val type = "select"
+1443. //            val value = "Авто"
+1444. //            val options = listOf("Авто", "Ручной", "Выключен")
+1445. //        }
+1446. //    }
+1447. 
+1448.     Scaffold { paddingValues ->
+1449.         Column(
+1450.             modifier = Modifier
+1451.                 .fillMaxSize()
+1452.                 .padding(paddingValues)
+1453.                 .verticalScroll(rememberScrollState())
+1454.                 .padding(16.dp)
+1455.         ) {
+1456. //            DeviceCard(
+1457. //                deviceId = predefinedSelectDevice.id,
+1458. //                imageRes = R.drawable.mqtt_logo,
+1459. //                name = predefinedSelectDevice.friendlyName,
+1460. //                type = predefinedSelectDevice.type,
+1461. //                value = predefinedSelectDevice.value,
+1462. //                options = predefinedSelectDevice.options,
+1463. //                navController = navHostController,
+1464. //                onSelectChange = { option ->
+1465. //                    devicesViewModel.onSelectChange(predefinedSelectDevice.id, option)
+1466. //                }
+1467. //            )
+1468. //
+1469. //            Spacer(modifier = Modifier.height(8.dp))
+1470. 
+1471.             switchDevices.forEach { device ->
+1472. 
+1473.                 val deviceData = deviceState[device.id]
+1474. 
+1475.                 DeviceCard(
+1476.                     deviceId = device.id,
+1477.                     imageRes = R.drawable.mqtt_logo,
+1478.                     name = device.friendlyName,
+1479.                     type = Constants.SWITCH_TYPE,
+1480.                     value = (deviceData?.get("state") as? String)?.toBooleanState() ?: false,
+1481.                     navController = navHostController,
+1482.                     onToggle = { state ->
+1483.                         devicesViewModel.onToggle(device.id, state)
+1484.                     }
+1485.                 )
+1486.                 Spacer(modifier = Modifier.height(8.dp))
+1487.             }
+1488. 
+1489. 
+1490.         }
+1491.     }
+1492. }
+1493. 
+
+
+com.example.iot_ha.ui.screens.home.RoomsScreen.kt
+
+1494. package com.example.iot_ha.ui.screens.home
+1495. 
+1496. import androidx.compose.foundation.layout.Box
+1497. import androidx.compose.foundation.layout.fillMaxSize
+1498. import androidx.compose.material3.Text
+1499. import androidx.compose.runtime.Composable
+1500. import androidx.compose.ui.Alignment
+1501. import androidx.compose.ui.Modifier
+1502. 
+1503. @Composable
+1504. fun com.example.iot_ha.ui.screens.home.RoomsScreen() {
+1505.     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+1506.         Text("Экран комнат")
+1507.     }
+1508. }
+
+SettingsScreen.kt
+
+1509. package com.example.iot_ha.ui.screens.home
+1510. 
+1511. import androidx.compose.foundation.layout.Box
+1512. import androidx.compose.foundation.layout.fillMaxSize
+1513. import androidx.compose.material3.Text
+1514. import androidx.compose.runtime.Composable
+1515. import androidx.compose.ui.Alignment
+1516. import androidx.compose.ui.Modifier
+1517. 
+1518. @Composable
+1519. fun SettingsScreen() {
+1520.     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+1521.         Text("Настройки")
+1522.     }
+1523. }
+
+Color.kt
+
+1524. package com.example.iot_ha.ui.theme
+1525. 
+1526. import androidx.compose.ui.graphics.Color
+1527. 
+1528. val Purple80 = Color(0xFFD0BCFF)
+1529. val PurpleGrey80 = Color(0xFFCCC2DC)
+1530. val Pink80 = Color(0xFFEFB8C8)
+1531. 
+1532. val Purple40 = Color(0xFF6650a4)
+1533. val PurpleGrey40 = Color(0xFF625b71)
+1534. val Pink40 = Color(0xFF7D5260)
+
+Theme.kt
+
+1535. package com.example.iot_ha.ui.theme
+1536. 
+1537. import android.os.Build
+1538. import androidx.compose.foundation.isSystemInDarkTheme
+1539. import androidx.compose.material3.MaterialTheme
+1540. import androidx.compose.material3.darkColorScheme
+1541. import androidx.compose.material3.dynamicDarkColorScheme
+1542. import androidx.compose.material3.dynamicLightColorScheme
+1543. import androidx.compose.material3.lightColorScheme
+1544. import androidx.compose.runtime.Composable
+1545. import androidx.compose.ui.platform.LocalContext
+1546. 
+1547. private val DarkColorScheme = darkColorScheme(
+1548.     primary = Purple80,
+1549.     secondary = PurpleGrey80,
+1550.     tertiary = Pink80
+1551. )
+1552. 
+1553. private val LightColorScheme = lightColorScheme(
+1554.     primary = Purple40,
+1555.     secondary = PurpleGrey40,
+1556.     tertiary = Pink40
+1557. 
+1558.     /* Other default colors to override
+1559.     background = Color(0xFFFFFBFE),
+1560.     surface = Color(0xFFFFFBFE),
+1561.     onPrimary = Color.White,
+1562.     onSecondary = Color.White,
+1563.     onTertiary = Color.White,
+1564.     onBackground = Color(0xFF1C1B1F),
+1565.     onSurface = Color(0xFF1C1B1F),
+1566.     */
+1567. )
+1568. 
+1569. @Composable
+1570. fun IothaTheme(
+1571.     darkTheme: Boolean = isSystemInDarkTheme(),
+1572.     // Dynamic color is available on Android 12+
+1573.     dynamicColor: Boolean = true,
+1574.     content: @Composable () -> Unit
+1575. ) {
+1576.     val colorScheme = when {
+1577.         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+1578.             val context = LocalContext.current
+1579.             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+1580.         }
+1581. 
+1582.         darkTheme -> DarkColorScheme
+1583.         else -> LightColorScheme
+1584.     }
+1585. 
+1586.     MaterialTheme(
+1587.         colorScheme = colorScheme,
+1588.         typography = Typography,
+1589.         content = content
+1590.     )
+1591. }
+
+Type.kt
+
+1592. package com.example.iot_ha.ui.theme
+1593. 
+1594. import androidx.compose.material3.Typography
+1595. import androidx.compose.ui.text.TextStyle
+1596. import androidx.compose.ui.text.font.FontFamily
+1597. import androidx.compose.ui.text.font.FontWeight
+1598. import androidx.compose.ui.unit.sp
+1599. 
+1600. // Set of Material typography styles to start with
+1601. val Typography = Typography(
+1602.     bodyLarge = TextStyle(
+1603.         fontFamily = FontFamily.Default,
+1604.         fontWeight = FontWeight.Normal,
+1605.         fontSize = 16.sp,
+1606.         lineHeight = 24.sp,
+1607.         letterSpacing = 0.5.sp
+1608.     )
+1609.     /* Other default text styles to override
+1610.     titleLarge = TextStyle(
+1611.         fontFamily = FontFamily.Default,
+1612.         fontWeight = FontWeight.Normal,
+1613.         fontSize = 22.sp,
+1614.         lineHeight = 28.sp,
+1615.         letterSpacing = 0.sp
+1616.     ),
+1617.     labelSmall = TextStyle(
+1618.         fontFamily = FontFamily.Default,
+1619.         fontWeight = FontWeight.Medium,
+1620.         fontSize = 11.sp,
+1621.         lineHeight = 16.sp,
+1622.         letterSpacing = 0.5.sp
+1623.     )
+1624.     */
+1625. )
+
+AuthorizationViewModel.kt
+
+1626. package com.example.iot_ha.ui.viewmodels
+1627. 
+1628. import androidx.compose.runtime.State
+1629. import androidx.compose.runtime.mutableStateOf
+1630. import androidx.lifecycle.ViewModel
+1631. import androidx.lifecycle.viewModelScope
+1632. import com.example.iot_ha.data.local.RoomLocalDatabase
+1633. import com.example.iot_ha.data.local.broker.Broker
+1634. import kotlinx.coroutines.launch
+1635. 
+1636. class AuthorizationViewModel(
+1637.     private val db: RoomLocalDatabase,
+1638. ) : ViewModel() {
+1639. 
+1640.     private val brokerDao = db.brokerDAO()
+1641. 
+1642.     private var _brokers = mutableStateOf<List<Broker>>(emptyList())
+1643.     val brokers: State<List<Broker>> = _brokers
+1644. 
+1645.     init {
+1646.         loadBrokers()
+1647.     }
+1648. 
+1649.     private fun loadBrokers() {
+1650.         viewModelScope.launch {
+1651.             _brokers.value = brokerDao.getAllBrokers()
+1652.         }
+1653.     }
+1654. 
+1655. 
+1656.     fun addBroker(serverUri: String, serverPort: Int, user: String?, password: String?) {
+1657.         viewModelScope.launch {
+1658.             val broker = Broker(
+1659.                 serverUri = serverUri,
+1660.                 serverPort = serverPort,
+1661.                 user = user,
+1662.                 password = password
+1663.             )
+1664.             brokerDao.insert(broker)
+1665.             loadBrokers()
+1666.         }
+1667.     }
+1668. 
+1669.     fun deleteBroker(broker: Broker) {
+1670.         viewModelScope.launch {
+1671.             brokerDao.deleteBroker(broker)
+1672.             loadBrokers()
+1673.         }
+1674.     }
+1675. }
+
+HomeViewModel.kt
+
+1676. package com.example.iot_ha.ui.viewmodels
+1677. 
+1678. import androidx.lifecycle.ViewModel
+1679. import com.example.iot_ha.data.local.RoomLocalDatabase
+1680. 
+1681. 
+1682. class HomeViewModel(db: RoomLocalDatabase) : ViewModel()
+
+AuthorizationViewModelFactory.kt
+
+1683. package com.example.iot_ha.ui.viewmodels.factory
+1684. 
+1685. import androidx.lifecycle.ViewModel
+1686. import androidx.lifecycle.ViewModelProvider
+1687. import com.example.iot_ha.data.local.RoomLocalDatabase
+1688. import com.example.iot_ha.ui.viewmodels.AuthorizationViewModel
+1689. 
+1690. class AuthorizationViewModelFactory(
+1691.     private val db: RoomLocalDatabase,
+1692. ) : ViewModelProvider.Factory {
+1693. 
+1694.     @Suppress("UNCHECKED_CAST")
+1695.     override fun <T : ViewModel> create(modelClass: Class<T>): T {
+1696.         if (modelClass.isAssignableFrom(AuthorizationViewModel::class.java)) {
+1697.             return AuthorizationViewModel(db) as T
+1698.         }
+1699.         throw IllegalArgumentException("Unknown ViewModel class")
+1700.     }
+1701. }
+
+DevicesViewModelFactory.kt
+
+1702. package com.example.iot_ha.ui.viewmodels.factory
+1703. 
+1704. import androidx.lifecycle.ViewModel
+1705. import androidx.lifecycle.ViewModelProvider
+1706. import com.example.iot_ha.data.local.RoomLocalDatabase
+1707. import com.example.iot_ha.ui.viewmodels.shared.DevicesViewModel
+1708. 
+1709. class DevicesViewModelFactory(private val db: RoomLocalDatabase) : ViewModelProvider.Factory {
+1710.     override fun <T : ViewModel> create(modelClass: Class<T>): T {
+1711.         if (modelClass.isAssignableFrom(DevicesViewModel::class.java)) {
+1712.             @Suppress("UNCHECKED_CAST")
+1713.             return DevicesViewModel(db) as T
+1714.         }
+1715.         throw IllegalArgumentException("Unknown ViewModel class")
+1716.     }
+1717. }
+
+HomeViewModelFactory.kt
+
+1718. package com.example.iot_ha.ui.viewmodels.factory
+1719. 
+1720. import androidx.lifecycle.ViewModel
+1721. import androidx.lifecycle.ViewModelProvider
+1722. import com.example.iot_ha.data.local.RoomLocalDatabase
+1723. import com.example.iot_ha.ui.viewmodels.HomeViewModel
+1724. 
+1725. class HomeViewModelFactory(private val db: RoomLocalDatabase) : ViewModelProvider.Factory {
+1726.     override fun <T : ViewModel> create(modelClass: Class<T>): T {
+1727.         if (modelClass.isAssignableFrom(HomeViewModel::class.java)) {
+1728.             @Suppress("UNCHECKED_CAST")
+1729.             return HomeViewModel(db) as T
+1730.         }
+1731.         throw IllegalArgumentException("Unknown ViewModel class")
+1732.     }
+1733. }
+
+
+SensorsViewModelFactory.kt
+
+1734. package com.example.iot_ha.ui.viewmodels.factory
+1735. 
+1736. import androidx.lifecycle.ViewModel
+1737. import androidx.lifecycle.ViewModelProvider
+1738. import com.example.iot_ha.ui.viewmodels.shared.SensorsViewModel
+1739. 
+1740. class SensorsViewModelFactory : ViewModelProvider.Factory {
+1741.     @Suppress("UNCHECKED_CAST")
+1742.     override fun <T : ViewModel> create(modelClass: Class<T>): T {
+1743.         if (modelClass.isAssignableFrom(SensorsViewModel::class.java)) {
+1744.             return SensorsViewModel() as T
+1745.         }
+1746.         throw IllegalArgumentException("Unknown ViewModel class")
+1747.     }
+1748. }
+
+
+DevicesViewModel.kt
+
+1749. package com.example.iot_ha.ui.viewmodels.shared
+1750. 
+1751. import android.util.Log
+1752. import androidx.lifecycle.ViewModel
+1753. import androidx.lifecycle.viewModelScope
+1754. import com.example.iot_ha.data.local.RoomLocalDatabase
+1755. import com.example.iot_ha.data.local.broker.BrokerState
+1756. import com.example.iot_ha.data.local.command.Command
+1757. import com.example.iot_ha.data.local.device.Device
+1758. import com.example.iot_ha.data.mqtt.MQTTClient
+1759. import kotlinx.coroutines.flow.MutableStateFlow
+1760. import kotlinx.coroutines.flow.StateFlow
+1761. import kotlinx.coroutines.flow.collectLatest
+1762. import kotlinx.coroutines.launch
+1763. 
+1764. class DevicesViewModel(private val db: RoomLocalDatabase) : ViewModel() {
+1765.     private val _devices = MutableStateFlow<List<Device>>(emptyList())
+1766.     val devices: StateFlow<List<Device>> = _devices
+1767. 
+1768.     init {
+1769.         viewModelScope.launch {
+1770.             BrokerState.brokerId.collectLatest { brokerId ->
+1771.                 if (brokerId != null) {
+1772.                     loadDevices(brokerId)
+1773.                 }
+1774.             }
+1775.         }
+1776.     }
+1777. 
+1778. 
+1779.     private suspend fun loadDevices(brokerId: Int) {
+1780.         db.deviceDAO().getDevicesByBrokerFlow(brokerId)
+1781.             .collect { deviceList ->
+1782.                 _devices.value = deviceList
+1783.             }
+1784.     }
+1785. 
+1786.     fun getDeviceIdByIeeeAddr(ieeeAddr: String, callback: (Int?) -> Unit) {
+1787.         viewModelScope.launch {
+1788.             val device = db.deviceDAO().getDeviceByIeeeAddr(ieeeAddr)
+1789.             callback(device?.id)
+1790.         }
+1791.     }
+1792. 
+1793.     fun getDevicesByTypeFlow(type: String): StateFlow<List<Device>> {
+1794.         val resultFlow = MutableStateFlow<List<Device>>(emptyList())
+1795. 
+1796.         viewModelScope.launch {
+1797.             db.commandDAO().getCommandsByTypeFlow(type).collect { commands ->
+1798.                 val deviceIds = commands.map { it.deviceId }.toSet()
+1799.                 val filteredDevices = _devices.value.filter { it.id in deviceIds }
+1800.                 resultFlow.value = filteredDevices
+1801.             }
+1802.         }
+1803. 
+1804.         return resultFlow
+1805.     }
+1806. 
+1807. 
+1808.     fun addDeviceIfNotExists(device: Device) {
+1809.         viewModelScope.launch {
+1810.             val existingDevice = db.deviceDAO().getDeviceByIeeeAddr(device.ieeeAddr)
+1811. 
+1812.             Log.i("DEVLIST", devices.value.toString())
+1813. 
+1814.             if (existingDevice == null) {
+1815.                 db.deviceDAO().insertDevice(device)
+1816.                 Log.i("DevicesViewModel", "Device added: $device")
+1817.             } else {
+1818.                 Log.i("DevicesViewModel", "Device already exists: $device")
+1819.             }
+1820.         }
+1821.     }
+1822. 
+1823.     fun addCommandIfNotExists(command: Command) {
+1824.         Log.i("addCommandIfNotExists", command.toString())
+1825. 
+1826.         viewModelScope.launch {
+1827.             val existingCommand = db.commandDAO().getCommandByCommandTopic(command.commandTopic)
+1828. 
+1829.             if (existingCommand == null) {
+1830.                 db.commandDAO().insertCommand(command)
+1831.             } else {
+1832.                 Log.i("DevicesViewModel", "Command already exists: $existingCommand")
+1833.             }
+1834.         }
+1835.     }
+1836. 
+1837.     fun onToggle(deviceId: Int, state: Boolean) {
+1838.         viewModelScope.launch {
+1839.             val cmd = db.commandDAO().getSwitchCommandByDeviceId(deviceId)
+1840. 
+1841.             val newState = if (!state) cmd?.payloadOff else cmd?.payloadOn
+1842.             cmd?.let {
+1843.                 if (newState != null) {
+1844.                     sendCommandToMqtt(it.commandTopic, newState)
+1845.                 }
+1846.             }
+1847.         }
+1848.     }
+1849. 
+1850.     //    fun onSliderChange(deviceId: Int, value: Float) {
+1851. //        viewModelScope.launch {
+1852. //            val command = getCommandForDevice(deviceId, value)
+1853. //            sendCommandToMqtt(command)
+1854. //        }
+1855. //    }
+1856. //
+1857.     fun onSelectChange(deviceId: Int, option: String) {
+1858.         viewModelScope.launch {
+1859.             sendCommandToMqtt("command", "")
+1860.         }
+1861.     }
+1862. 
+1863.     private fun sendCommandToMqtt(topic: String, command: String) {
+1864.         val mqttClient = MQTTClient.getInstance()
+1865.         mqttClient.publish(topic, command)
+1866.         println("Отправка в MQTT: $command")
+1867.     }
+1868. }
+1869. 
+
+
+SensorsViewModel.kt
+
+1870. package com.example.iot_ha.ui.viewmodels.shared
+1871. 
+1872. import android.util.Log
+1873. import androidx.lifecycle.ViewModel
+1874. import com.example.iot_ha.ui.viewmodels.shared.data.SensorsData
+1875. import kotlinx.coroutines.flow.MutableStateFlow
+1876. import kotlinx.coroutines.flow.StateFlow
+1877. 
+1878. class SensorsViewModel : ViewModel() {
+1879.     private val _sensorData = MutableStateFlow<Map<String, SensorsData>>(emptyMap())
+1880.     val sensorData: StateFlow<Map<String, SensorsData>> = _sensorData
+1881. 
+1882.     fun updateSensorData(topic: String, payload: String) {
+1883.         _sensorData.value += (topic to SensorsData(topic, payload))
+1884.     }
+1885. 
+1886.     fun test() {
+1887.         Log.i("ViewModel", "TESTING MESSAGE")
+1888.     }
+1889. }
+
+SensorsData.kt
+
+1890. package com.example.iot_ha.ui.viewmodels.shared.data
+1891. 
+1892. data class SensorsData(
+1893.     val topic: String,
+1894.     val payload: String,
+1895.     val timestamp: Long = System.currentTimeMillis()
+1896. )
+
+
+Constants.kt
+
+1897. package com.example.iot_ha.utils
+1898. 
+1899. object Constants {
+1900.     const val SWITCH_TYPE = "switch"
+1901. 
+1902.     val TABS_LIST = listOf("Устройства", "Комнаты", "Настройки")
+1903. }
+
+DeviceActionBuilder.kt
+
+1904. class DeviceActionBuilder(private val deviceId: Int) {
+1905.     fun buildOnToggle(): (Int, Boolean) -> Unit = { id, state ->
+1906.         if (id == deviceId) {
+1907.             println("[$deviceId] Toggle changed: $state")
+1908.         }
+1909.     }
+1910. 
+1911.     fun buildOnSliderChange(): (Int, Float) -> Unit = { id, value ->
+1912.         if (id == deviceId) {
+1913.             println("[$deviceId] Slider value: $value")
+1914.         }
+1915.     }
+1916. 
+1917.     fun buildOnSelectChange(): (Int, String) -> Unit = { id, option ->
+1918.         if (id == deviceId) {
+1919.             println("[$deviceId] Selected: $option")
+1920.         }
+1921.     }
+1922. }
+
+
+Extensions.kt
+
+1923. package com.example.iot_ha.utils
+1924. 
+1925. fun String.toBooleanState(): Boolean = when (this) {
+1926.     "ON", "true", "1" -> true
+1927.     else -> false
+1928. }
+
+ExampleUnitTest.kt
+
+1929. package com.example.iot_ha
+1930. 
+1931. import org.junit.Assert.assertEquals
+1932. import org.junit.Test
+1933. 
+1934. /**
+1935.  * Example local unit test, which will execute on the development machine (host).
+1936.  *
+1937.  * See [testing documentation](http://d.android.com/tools/testing).
+1938.  */
+1939. class ExampleUnitTest {
+1940.     @Test
+1941.     fun addition_isCorrect() {
+1942.         assertEquals(4, 2 + 2)
+1943.     }
+1944. }
+

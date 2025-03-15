@@ -8,9 +8,6 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface DeviceDAO {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(device: Device)
-
     @Query("SELECT * FROM devices WHERE brokerId = :brokerId")
     suspend fun getDevicesByBroker(brokerId: Int): List<Device>
 

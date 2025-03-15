@@ -23,8 +23,9 @@ import com.example.iot_ha.ui.viewmodels.shared.DevicesViewModel
 @Composable
 fun DeviceDetailScreen(backStackEntry: NavBackStackEntry, devicesViewModel: DevicesViewModel) {
     val deviceId = backStackEntry.arguments?.getString("deviceId")?.toIntOrNull() ?: -1
+
     val devices by devicesViewModel.devices.collectAsState()
-    val friendlyName = devices.find { it.id == deviceId }?.friendlyName ?: "Unknown Device"
+
     val deviceState by DeviceState.devicesData.collectAsState()
     val deviceData = deviceState[deviceId]
 
@@ -38,8 +39,10 @@ fun DeviceDetailScreen(backStackEntry: NavBackStackEntry, devicesViewModel: Devi
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            DeviceTitle(friendlyName)
+            DeviceTitle(friendlyName = devices.find { it.id == deviceId }?.friendlyName ?: "Unknown Device")
+
             Spacer(modifier = Modifier.height(8.dp))
+
             if (deviceData != null) {
                 DeviceDetails(deviceData)
             } else {
