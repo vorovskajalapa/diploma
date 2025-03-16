@@ -24,9 +24,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.iot_ha.R
 import com.example.iot_ha.data.local.RoomLocalDatabase
-import com.example.iot_ha.data.local.broker.Broker
-import com.example.iot_ha.data.local.broker.BrokerState
-import com.example.iot_ha.data.mqtt.MQTTClient
 import com.example.iot_ha.data.mqtt.MQTTMessageHandler
 import com.example.iot_ha.ui.components.broker.BrokerInputForm
 import com.example.iot_ha.ui.components.broker.BrokerList
@@ -34,10 +31,6 @@ import com.example.iot_ha.ui.viewmodels.AuthorizationViewModel
 import com.example.iot_ha.ui.viewmodels.factory.AuthorizationViewModelFactory
 import com.example.iot_ha.ui.viewmodels.shared.DevicesViewModel
 import com.example.iot_ha.ui.viewmodels.shared.SensorsViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @Composable
 fun AuthorizationScreen(
@@ -51,58 +44,11 @@ fun AuthorizationScreen(
     var password by remember { mutableStateOf("") }
 
     val db = RoomLocalDatabase.getInstance(LocalContext.current)
+    val messageHandler = remember { MQTTMessageHandler(sensorsViewModel, devicesViewModel) }
     val authorizationViewModel: AuthorizationViewModel =
-        viewModel(factory = (AuthorizationViewModelFactory(db)))
+        viewModel(factory = AuthorizationViewModelFactory(db, messageHandler))
 
     val brokers = authorizationViewModel.brokers.value
-
-    val messageHandler = remember { MQTTMessageHandler(sensorsViewModel, devicesViewModel) }
-
-    fun handleLogin(
-        broker: Broker,
-        messageHandler: MQTTMessageHandler,
-        navHostController: NavHostController
-    ) {
-        BrokerState.setBrokerId(broker.id)
-
-        val mqttClient = MQTTClient.reinitialize(broker, messageHandler)
-        val isSuccess = mqttClient.connect()
-        if (isSuccess) {
-            navHostController.navigate("home")
-
-            CoroutineScope(Dispatchers.IO).launch {
-                mqttClient.subscribe("devicelist")
-                delay(500)
-                mqttClient.subscribe("homeassistant/#")
-                mqttClient.subscribe("zigbee/#")
-            }
-        }
-    }
-
-    fun handleDelete(broker: Broker, authorizationViewModel: AuthorizationViewModel) {
-        val mqttClient = MQTTClient.getInstance()
-        mqttClient.disconnect()
-        authorizationViewModel.deleteBroker(broker)
-    }
-
-    fun handleAddBroker(
-        serverUri: String,
-        serverPort: String,
-        user: String,
-        password: String,
-        onClearFields: () -> Unit,
-        authorizationViewModel: AuthorizationViewModel
-    ) {
-        if (serverUri.isNotBlank() && serverPort.isNotBlank()) {
-            authorizationViewModel.addBroker(
-                serverUri,
-                serverPort.toIntOrNull() ?: 1883,
-                user.takeIf { it.isNotBlank() },
-                password.takeIf { it.isNotBlank() }
-            )
-            onClearFields()
-        }
-    }
 
     Column(
         modifier = Modifier
@@ -134,19 +80,16 @@ fun AuthorizationScreen(
             onUserChange = { user = it },
             onPasswordChange = { password = it },
             onAddBroker = {
-                handleAddBroker(
+                authorizationViewModel.addBroker(
                     serverUri,
-                    serverPort,
-                    user,
-                    password,
-                    onClearFields = {
-                        serverUri = ""
-                        serverPort = ""
-                        user = ""
-                        password = ""
-                    },
-                    authorizationViewModel
+                    serverPort.toIntOrNull() ?: 1883,
+                    user.takeIf { it.isNotBlank() },
+                    password.takeIf { it.isNotBlank() }
                 )
+                serverUri = ""
+                serverPort = ""
+                user = ""
+                password = ""
             }
         )
 
@@ -154,8 +97,12 @@ fun AuthorizationScreen(
 
         BrokerList(
             brokers = brokers,
-            onDelete = { handleDelete(it, authorizationViewModel) },
-            onLogin = { handleLogin(it, messageHandler, navHostController) }
+            onDelete = { authorizationViewModel.deleteBroker(it) },
+            onLogin = { broker ->
+                authorizationViewModel.handleLogin(broker) {
+                    navHostController.navigate("home")
+                }
+            }
         )
     }
 }

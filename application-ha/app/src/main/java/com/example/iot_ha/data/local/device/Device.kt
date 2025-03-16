@@ -43,9 +43,10 @@ data class Device(
             brokerId: Int
         ): Device {
             val topic = "zigbee/0x$ieeeAddr"
+            val name = friendlyName.ifEmpty { "0x$ieeeAddr" }
             return Device(
                 ieeeAddr = "0x$ieeeAddr",
-                friendlyName = friendlyName,
+                friendlyName = name,
                 modelId = modelId,
                 topic = topic,
                 roomId = roomId,

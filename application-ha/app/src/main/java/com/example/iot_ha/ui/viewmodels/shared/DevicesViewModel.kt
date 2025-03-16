@@ -11,6 +11,7 @@ import com.example.iot_ha.data.mqtt.MQTTClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class DevicesViewModel(private val db: RoomLocalDatabase) : ViewModel() {
@@ -84,6 +85,22 @@ class DevicesViewModel(private val db: RoomLocalDatabase) : ViewModel() {
             }
         }
     }
+
+    fun updateDeviceName(deviceId: Int, newName: String) {
+        viewModelScope.launch {
+            val device = db.deviceDAO().getDeviceById(deviceId)
+
+            val updatedDevice = device.copy(friendlyName = newName)
+
+            db.deviceDAO().updateDevice(updatedDevice)
+            _devices.update { list ->
+                list.map {
+                    if (it.id == deviceId) updatedDevice else it
+                }
+            }
+        }
+    }
+
 
     fun addCommandIfNotExists(command: Command) {
         Log.i("addCommandIfNotExists", command.toString())
