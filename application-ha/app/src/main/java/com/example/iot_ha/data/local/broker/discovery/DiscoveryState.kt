@@ -1,5 +1,8 @@
 package com.example.iot_ha.data.local.broker.discovery
 
+import com.example.iot_ha.data.mqtt.MQTTClient
+import com.example.iot_ha.data.mqtt.Topics
+import com.example.iot_ha.utils.Constants
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -16,17 +19,19 @@ object DiscoveryState {
 
     fun startDiscovery() {
         _isDiscoveryActive.value = true
+        MQTTClient.publish(Topics.DISCOVERY_TOPIC, Constants.DISCOVERY_ENABLE)
 
         resetJob?.cancel()
 
         resetJob = CoroutineScope(Dispatchers.Default).launch {
-            delay(255_000)
+            delay(Constants.DISCOVERY_TIME)
             _isDiscoveryActive.value = false
         }
     }
 
     fun stopDiscovery() {
         _isDiscoveryActive.value = false
+        MQTTClient.publish(Topics.DISCOVERY_TOPIC, Constants.DISCOVERY_DISABLE)
         resetJob?.cancel()
     }
 }

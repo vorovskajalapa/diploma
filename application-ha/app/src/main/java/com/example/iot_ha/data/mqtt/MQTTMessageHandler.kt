@@ -7,6 +7,7 @@ import com.example.iot_ha.data.local.device.Device
 import com.example.iot_ha.data.local.device.DeviceState
 import com.example.iot_ha.ui.viewmodels.shared.DevicesViewModel
 import com.example.iot_ha.ui.viewmodels.shared.SensorsViewModel
+import com.example.iot_ha.utils.Constants
 import org.json.JSONObject
 
 class MQTTMessageHandler(
@@ -17,9 +18,9 @@ class MQTTMessageHandler(
         Log.i("MQTTHandler", "📩 Обрабатываем сообщение: $payload с топика: $topic")
 
         when {
-            topic.startsWith("zigbee/0x") -> handleDeviceStateMessage(topic, payload)
-            topic.startsWith("homeassistant/") -> handleDeviceCommandMessage(topic, payload)
-            topic.startsWith("devicelist") -> handleDeviceListMessage(payload)
+            topic.startsWith(Topics.DEVICE_STATE_TOPIC) -> handleDeviceStateMessage(topic, payload)
+            topic.startsWith(Topics.DEVICE_COMMANDS_TOPIC) -> handleDeviceCommandMessage(topic, payload)
+            topic.startsWith(Topics.DEVICE_LIST_TOPIC) -> handleDeviceListMessage(payload)
             else -> Log.i("MQTTHandler", "⚠ Необрабатываемый топик: $topic")
         }
     }
@@ -94,7 +95,7 @@ class MQTTMessageHandler(
 
     private fun extractCommandTypeFromTopic(topic: String): String {
         return when {
-            topic.contains("/switch/", ignoreCase = true) -> "switch"
+            topic.contains("/switch/", ignoreCase = true) -> Constants.SWITCH_TYPE
 //            topic.contains("/select/", ignoreCase = true) -> "select"
 //            topic.contains("/light/", ignoreCase = true) -> "dimmer"
             else -> "unknown"

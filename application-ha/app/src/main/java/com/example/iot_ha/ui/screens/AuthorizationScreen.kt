@@ -72,7 +72,7 @@ fun AuthorizationScreen(
 
             CoroutineScope(Dispatchers.IO).launch {
                 mqttClient.subscribe("devicelist")
-                delay(500) // todo: fix (если получится), хз не фикситься, не успевает обработать
+                delay(500)
                 mqttClient.subscribe("homeassistant/#")
                 mqttClient.subscribe("zigbee/#")
             }

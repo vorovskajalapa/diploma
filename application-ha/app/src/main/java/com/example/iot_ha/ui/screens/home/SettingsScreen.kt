@@ -39,10 +39,8 @@ fun SettingsScreen() {
     fun onSwitchChanged(enabled: Boolean) {
         if (enabled) {
             DiscoveryState.startDiscovery()
-            MQTTClient.publish("zigbee/bridge/config/permit_join", "true")
         } else {
             DiscoveryState.stopDiscovery()
-            MQTTClient.publish("zigbee/bridge/config/permit_join", "false")
         }
     }
 
@@ -98,8 +96,6 @@ fun SettingsScreen() {
                         )
                     )
                 }
-
-//                Spacer(modifier = Modifier.height(16.dp))
 
                 if (discoveryState) {
                     Text(
