@@ -1,8 +1,25 @@
 package com.example.iot_ha.ui.screens.home
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -30,7 +47,7 @@ fun DeviceDetailScreen(
     val rooms by roomsViewModel.rooms.collectAsState()
     val device = devices.find { it.id == deviceId }
     val currentRoom = rooms.find { it.id == device?.roomId }
-    var selectedRoom by remember { mutableStateOf(currentRoom?.name ?: "Выберите комнату") }
+    var selectedRoom by remember { mutableStateOf(currentRoom?.name ?: "Select room") }
     var expanded by remember { mutableStateOf(false) }
 
     Surface(
@@ -57,7 +74,9 @@ fun DeviceDetailScreen(
                     value = selectedRoom,
                     onValueChange = {},
                     readOnly = true,
-                    modifier = Modifier.fillMaxWidth().menuAnchor(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(),
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                     }
@@ -67,9 +86,9 @@ fun DeviceDetailScreen(
                     onDismissRequest = { expanded = false }
                 ) {
                     DropdownMenuItem(
-                        text = { Text("Выберите комнату") },
+                        text = { Text("Select room") },
                         onClick = {
-                            selectedRoom = "Выберите комнату"
+                            selectedRoom = "Select room"
                             expanded = false
                             devicesViewModel.assignRoomToDevice(deviceId, null)
                         }

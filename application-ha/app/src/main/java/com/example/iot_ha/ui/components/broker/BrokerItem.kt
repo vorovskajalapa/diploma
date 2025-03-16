@@ -60,7 +60,7 @@ fun BrokerItem(broker: Broker, onDelete: () -> Unit, onLogin: () -> Unit) {
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
-                    Text("Войти", color = Color.White)
+                    Text("Login", color = Color.White)
                 }
                 Spacer(modifier = Modifier.width(6.dp))
                 OutlinedButton(
@@ -69,7 +69,7 @@ fun BrokerItem(broker: Broker, onDelete: () -> Unit, onLogin: () -> Unit) {
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Удалить")
+                    Text("Delete")
                 }
             }
         }

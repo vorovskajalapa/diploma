@@ -32,4 +32,7 @@ interface DeviceDAO {
 
     @Update
     suspend fun updateDevice(device: Device)
+
+    @Query("SELECT COUNT(*) FROM devices WHERE roomId = :roomId")
+    suspend fun getDeviceCountForRoom(roomId: Long): Int
 }

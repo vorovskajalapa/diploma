@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.iot_ha.data.local.RoomLocalDatabase
 import com.example.iot_ha.data.local.room.RoomEntity
-import com.example.iot_ha.data.local.room.RoomEntityDAO
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -22,6 +21,13 @@ class RoomsViewModel(private val db: RoomLocalDatabase) : ViewModel() {
     fun addRoom(name: String) {
         viewModelScope.launch {
             db.roomEntityDAO().insertRoom(RoomEntity(name = name))
+        }
+    }
+
+    fun getDeviceCount(roomId: Long, onResult: (Int) -> Unit) {
+        viewModelScope.launch {
+            val count = db.deviceDAO().getDeviceCountForRoom(roomId)
+            onResult(count)
         }
     }
 }

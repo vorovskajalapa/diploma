@@ -17,7 +17,7 @@ fun BrokerList(
     onLogin: (Broker) -> Unit
 ) {
     brokers.lastOrNull()?.let { broker ->
-        Text("Последний сохранённый брокер:", style = MaterialTheme.typography.labelMedium)
+        Text("Recently used broker:", style = MaterialTheme.typography.labelMedium)
         Spacer(modifier = Modifier.height(1.dp))
         BrokerItem(
             broker = broker,

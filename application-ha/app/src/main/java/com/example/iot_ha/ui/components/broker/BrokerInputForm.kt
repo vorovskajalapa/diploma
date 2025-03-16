@@ -57,7 +57,7 @@ fun BrokerInputForm(
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
         ) {
-            Text("Добавить брокера", color = Color.White)
+            Text("Add broker", color = Color.White)
         }
     }
 }
