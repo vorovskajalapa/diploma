@@ -1496,7 +1496,7 @@ AuthorizationScreen.kt
 1383. import com.example.iot_ha.data.local.broker.Broker
 1384. import com.example.iot_ha.data.local.broker.BrokerState
 1385. import com.example.iot_ha.data.mqtt.MQTTClient
-1386. import com.example.iot_ha.data.mqtt.MQTTMessageHandler
+1386. import com.example.iot_ha.data.mqtt.domain.MQTTMessageHandler
 1387. import com.example.iot_ha.ui.components.broker.BrokerInputForm
 1388. import com.example.iot_ha.ui.components.broker.BrokerList
 1389. import com.example.iot_ha.ui.viewmodels.AuthorizationViewModel

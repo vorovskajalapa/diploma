@@ -3,7 +3,7 @@ package com.example.iot_ha.ui.viewmodels.factory
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.iot_ha.data.local.RoomLocalDatabase
-import com.example.iot_ha.data.mqtt.MQTTMessageHandler
+import com.example.iot_ha.data.mqtt.domain.MQTTMessageHandler
 import com.example.iot_ha.ui.viewmodels.AuthorizationViewModel
 
 class AuthorizationViewModelFactory(

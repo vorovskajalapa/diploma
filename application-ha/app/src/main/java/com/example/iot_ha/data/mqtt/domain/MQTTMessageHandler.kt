@@ -1,10 +1,11 @@
-package com.example.iot_ha.data.mqtt
+package com.example.iot_ha.data.mqtt.domain
 
 import android.util.Log
 import com.example.iot_ha.data.local.broker.BrokerState
 import com.example.iot_ha.data.local.command.Command
 import com.example.iot_ha.data.local.device.Device
 import com.example.iot_ha.data.local.device.DeviceState
+import com.example.iot_ha.data.mqtt.util.Topics
 import com.example.iot_ha.ui.viewmodels.shared.DevicesViewModel
 import com.example.iot_ha.ui.viewmodels.shared.SensorsViewModel
 import com.example.iot_ha.utils.Constants

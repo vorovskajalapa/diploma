@@ -1,4 +1,4 @@
-package com.example.iot_ha.data.mqtt
+package com.example.iot_ha.data.mqtt.util
 
 object Topics {
     const val DISCOVERY_TOPIC = "zigbee/bridge/config/permit_join"

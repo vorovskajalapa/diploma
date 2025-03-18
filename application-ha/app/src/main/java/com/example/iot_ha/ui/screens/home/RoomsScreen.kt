@@ -56,9 +56,13 @@ fun RoomsScreen(
                         roomId = room.id.toInt(),
                         roomName = room.name,
                         deviceCount = deviceCount,
-                        navHostController = navHostController
+                        navHostController = navHostController,
+                        onDelete = { roomId ->
+                            roomsViewModel.deleteRoom(roomId)
+                        }
                     )
                 }
+
             }
         }
 

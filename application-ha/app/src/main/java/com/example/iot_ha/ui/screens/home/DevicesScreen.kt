@@ -28,17 +28,6 @@ fun DevicesScreen(navHostController: NavHostController, devicesViewModel: Device
     val switchDevices by devicesViewModel.getDevicesByTypeFlow("switch").collectAsState()
     val deviceState by DeviceState.devicesData.collectAsState()
 
-
-//    val predefinedSelectDevice = remember {
-//        object {
-//            val id = -1
-//            val friendlyName = "Выбор режима"
-//            val type = "select"
-//            val value = "Авто"
-//            val options = listOf("Авто", "Ручной", "Выключен")
-//        }
-//    }
-
     Scaffold { paddingValues ->
         Column(
             modifier = Modifier
@@ -47,21 +36,6 @@ fun DevicesScreen(navHostController: NavHostController, devicesViewModel: Device
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
-//            DeviceCard(
-//                deviceId = predefinedSelectDevice.id,
-//                imageRes = R.drawable.mqtt_logo,
-//                name = predefinedSelectDevice.friendlyName,
-//                type = predefinedSelectDevice.type,
-//                value = predefinedSelectDevice.value,
-//                options = predefinedSelectDevice.options,
-//                navController = navHostController,
-//                onSelectChange = { option ->
-//                    devicesViewModel.onSelectChange(predefinedSelectDevice.id, option)
-//                }
-//            )
-//
-//            Spacer(modifier = Modifier.height(8.dp))
-
             switchDevices.forEach { device ->
 
                 val deviceData = deviceState[device.id]

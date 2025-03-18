@@ -24,7 +24,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.iot_ha.R
 import com.example.iot_ha.data.local.RoomLocalDatabase
-import com.example.iot_ha.data.mqtt.MQTTMessageHandler
+import com.example.iot_ha.data.mqtt.domain.MQTTMessageHandler
 import com.example.iot_ha.ui.components.broker.BrokerInputForm
 import com.example.iot_ha.ui.components.broker.BrokerList
 import com.example.iot_ha.ui.viewmodels.AuthorizationViewModel

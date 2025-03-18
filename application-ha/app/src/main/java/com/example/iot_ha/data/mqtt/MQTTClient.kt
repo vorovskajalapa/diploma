@@ -2,6 +2,10 @@ package com.example.iot_ha.data.mqtt
 
 import android.util.Log
 import com.example.iot_ha.data.local.broker.Broker
+import com.example.iot_ha.data.mqtt.domain.MQTTMessageHandler
+import com.example.iot_ha.data.mqtt.interfaces.MQTTConnection
+import com.example.iot_ha.data.mqtt.interfaces.MQTTMessaging
+import com.example.iot_ha.utils.logging.Logger
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
 import org.eclipse.paho.client.mqttv3.MqttCallback
 import org.eclipse.paho.client.mqttv3.MqttClient
@@ -9,7 +13,7 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 import org.eclipse.paho.client.mqttv3.MqttException
 import org.eclipse.paho.client.mqttv3.MqttMessage
 
-object MQTTClient {
+object MQTTClient: MQTTMessaging, MQTTConnection {
     private var mqttClient: MqttClient? = null
     private var broker: Broker? = null
     private var messageHandler: MQTTMessageHandler? = null
@@ -31,7 +35,7 @@ object MQTTClient {
         return this
     }
 
-    fun connect(): Boolean {
+    override fun connect(): Boolean {
         return try {
             val clientId = MqttClient.generateClientId()
             mqttClient =
@@ -45,15 +49,15 @@ object MQTTClient {
             }
 
             mqttClient?.connect(options)
-            Log.i("MQTT", "✅ Подключение успешно!")
+            Logger.log(MQTTClient::class, "Подключение успешно!")
             true
         } catch (e: MqttException) {
-            Log.e("MQTT", "Ошибка подключения: ${e.reasonCode} - ${e.message}")
+            Logger.log(MQTTClient::class, "Ошибка подключения: ${e.reasonCode} - ${e.message}")
             false
         }
     }
 
-    fun subscribe(topic: String) {
+    override fun subscribe(topic: String) {
         try {
             mqttClient?.setCallback(object : MqttCallback {
                 override fun connectionLost(cause: Throwable?) {
@@ -79,7 +83,7 @@ object MQTTClient {
         }
     }
 
-    fun publish(topic: String, payload: String, qos: Int = 1, retained: Boolean = false) {
+    override fun publish(topic: String, payload: String, qos: Int, retained: Boolean) {
         try {
             val message = MqttMessage(payload.toByteArray()).apply {
                 this.qos = qos
@@ -92,7 +96,7 @@ object MQTTClient {
         }
     }
 
-    fun disconnect() {
+    override fun disconnect() {
         try {
             mqttClient?.disconnect()
             Log.i("MQTT", "🔌 Отключен от брокера")

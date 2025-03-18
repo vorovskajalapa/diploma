@@ -8,7 +8,7 @@ import com.example.iot_ha.data.local.RoomLocalDatabase
 import com.example.iot_ha.data.local.broker.Broker
 import com.example.iot_ha.data.local.broker.BrokerState
 import com.example.iot_ha.data.mqtt.MQTTClient
-import com.example.iot_ha.data.mqtt.MQTTMessageHandler
+import com.example.iot_ha.data.mqtt.domain.MQTTMessageHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

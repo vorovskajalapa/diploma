@@ -12,8 +12,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,7 +37,8 @@ fun RoomCard(
     roomId: Int,
     roomName: String,
     deviceCount: Int,
-    navHostController: NavHostController
+    navHostController: NavHostController,
+    onDelete: (Int) -> Unit
 ) {
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -63,11 +68,6 @@ fun RoomCard(
                     fontWeight = FontWeight.Bold,
                     color = Color.Black
                 )
-                Text(
-                    text = "Комната №$roomId",
-                    fontSize = 14.sp,
-                    color = Color.Gray
-                )
             }
             Spacer(modifier = Modifier.width(16.dp))
             Box(
@@ -84,7 +84,10 @@ fun RoomCard(
                     fontWeight = FontWeight.Bold
                 )
             }
+            Spacer(modifier = Modifier.width(8.dp))
+            IconButton(onClick = { onDelete(roomId) }) {
+                Icon(imageVector = Icons.Default.Delete, contentDescription = "Удалить комнату", tint = Color.Red)
+            }
         }
     }
 }
-

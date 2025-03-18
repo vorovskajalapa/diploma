@@ -30,4 +30,10 @@ class RoomsViewModel(private val db: RoomLocalDatabase) : ViewModel() {
             onResult(count)
         }
     }
+
+    fun deleteRoom(roomId: Int) {
+        viewModelScope.launch {
+            db.roomEntityDAO().deleteRoom(roomId)
+        }
+    }
 }

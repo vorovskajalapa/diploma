@@ -36,7 +36,7 @@ fun SettingsScreen() {
 
     var remainingTime by remember { mutableIntStateOf(0) }
 
-    fun onSwitchChanged(enabled: Boolean) {
+    fun onSwitchChanged(enabled: Boolean) { // rename to onDiscoverySwitchChanged
         if (enabled) {
             DiscoveryState.startDiscovery()
         } else {
