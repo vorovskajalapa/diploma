@@ -97,7 +97,10 @@ fun HomeScreen(
                     roomsViewModel = roomsViewModel
                 )
 
+//                2 -> ScheduleScreen()
+
                 2 -> SettingsScreen()
+
             }
         }
     }

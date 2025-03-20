@@ -32,16 +32,6 @@ class MQTTMessageHandler(
 
         if (deviceId != null) {
             DeviceState.updateDeviceData(deviceId, payload)
-            Log.i("KAKASHKI", "PRESS")
-            Log.i("STATE", DeviceState.devicesData.value.toString())
-//            when (val value = DeviceState.getDeviceValue(deviceId, "power")) {
-//                is String -> println("Значение - строка: $value")
-//                is Int -> println("Значение - число: $value")
-//                is Double -> println("Значение - дробное число: $value")
-//                is Boolean -> println("Значение - булево: $value")
-//                else -> println("Неизвестный тип: ${value?.javaClass}")
-//            }
-
         } else {
             println("Устройство с IEEE Addr $ieeeAddr не найдено")
         }
@@ -112,28 +102,30 @@ class MQTTMessageHandler(
         try {
             val jsonObject = JSONObject(payload)
 
-            val key = jsonObject.keys().asSequence().firstOrNull() ?: "Нет данных"
-            val deviceJson = jsonObject.optJSONObject(key) ?: JSONObject()
+            for (key in jsonObject.keys()) {
+                val deviceJson = jsonObject.optJSONObject(key) ?: continue
 
-            val ieeeAddr = deviceJson.optString("ieeeAddr")
-            val friendlyName = deviceJson.getString("friendly_name")
-            val modelId = deviceJson.optString("ModelId")
+                val ieeeAddr = deviceJson.optString("ieeeAddr")
+                val friendlyName = deviceJson.optString("friendly_name")
+                val modelId = deviceJson.optString("ModelId")
 
-            val device = Device.create(
-                ieeeAddr = ieeeAddr,
-                friendlyName = friendlyName,
-                modelId = modelId,
-                roomId = null,
-                brokerId = BrokerState.brokerId.value ?: -1
-            )
+                val device = Device.create(
+                    ieeeAddr = ieeeAddr,
+                    friendlyName = friendlyName,
+                    modelId = modelId,
+                    roomId = null,
+                    brokerId = BrokerState.brokerId.value ?: -1
+                )
 
-            Log.i("DEVICE", "📥 Получено устройство: $device")
+                Log.i("DEVICE", "📥 Получено устройство: $device")
 
-            devicesViewModel.addDeviceIfNotExists(device)
+                devicesViewModel.addDeviceIfNotExists(device)
+            }
 
         } catch (e: Exception) {
             Log.e("DEVICE", "Ошибка обработки списка устройств: ${e.message}")
         }
     }
+
 }
 

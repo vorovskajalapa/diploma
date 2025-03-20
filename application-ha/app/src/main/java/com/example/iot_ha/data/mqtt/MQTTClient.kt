@@ -18,7 +18,7 @@ object MQTTClient: MQTTMessaging, MQTTConnection {
     private var broker: Broker? = null
     private var messageHandler: MQTTMessageHandler? = null
 
-    fun initialize(broker: Broker, handler: MQTTMessageHandler): MQTTClient {
+    fun initialize(broker: Broker, handler: MQTTMessageHandler?): MQTTClient {
         this.broker = broker
         this.messageHandler = handler
         return this

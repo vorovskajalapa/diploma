@@ -57,6 +57,23 @@ class DevicesViewModel(private val db: RoomLocalDatabase) : ViewModel() {
         return resultFlow
     }
 
+    fun getDevicesWithoutCommandsFlow(): StateFlow<List<Device>> {
+        val resultFlow = MutableStateFlow<List<Device>>(emptyList())
+
+        viewModelScope.launch {
+            db.deviceDAO().getAllDevicesFlow().collect { devices ->
+                db.commandDAO().getAllCommandsFlow().collect { commands ->
+                    val deviceIdsWithCommands = commands.map { it.deviceId }.toSet()
+                    val devicesWithoutCommands = devices.filter { it.id !in deviceIdsWithCommands }
+                    resultFlow.value = devicesWithoutCommands
+                }
+            }
+        }
+
+        return resultFlow
+    }
+
+
     fun getDevicesByRoomIdFlow(roomId: Int): StateFlow<List<Device>> {
         val resultFlow = MutableStateFlow<List<Device>>(emptyList())
 
@@ -130,6 +147,12 @@ class DevicesViewModel(private val db: RoomLocalDatabase) : ViewModel() {
     }
 
     fun onSelectChange(deviceId: Int, option: String) {
+        viewModelScope.launch {
+            sendCommandToMqtt("command", "")
+        }
+    }
+
+    fun onValueChange(deviceId: Int, value: Int) {
         viewModelScope.launch {
             sendCommandToMqtt("command", "")
         }

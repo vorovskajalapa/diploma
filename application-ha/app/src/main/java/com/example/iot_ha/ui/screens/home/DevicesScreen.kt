@@ -26,6 +26,8 @@ fun DevicesScreen(navHostController: NavHostController, devicesViewModel: Device
 
     val devices by devicesViewModel.devices.collectAsState()
     val switchDevices by devicesViewModel.getDevicesByTypeFlow("switch").collectAsState()
+    val devicesWithoutCommands by devicesViewModel.getDevicesWithoutCommandsFlow().collectAsState()
+
     val deviceState by DeviceState.devicesData.collectAsState()
 
     Scaffold { paddingValues ->
@@ -36,6 +38,21 @@ fun DevicesScreen(navHostController: NavHostController, devicesViewModel: Device
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
+            devicesWithoutCommands.forEach { device ->
+
+                DeviceCard(
+                    deviceId = device.id,
+                    imageRes = R.drawable.mqtt_logo,
+                    name = device.friendlyName,
+                    navController = navHostController,
+                    onToggle = { state ->
+                        devicesViewModel.onToggle(device.id, state)
+                    }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+
             switchDevices.forEach { device ->
 
                 val deviceData = deviceState[device.id]

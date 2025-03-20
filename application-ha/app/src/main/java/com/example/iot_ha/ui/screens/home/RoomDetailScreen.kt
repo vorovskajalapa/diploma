@@ -66,8 +66,6 @@ fun RoomDetailScreen(
             }
         }
     }
-
-    Text("Room $roomId")
 }
 
 

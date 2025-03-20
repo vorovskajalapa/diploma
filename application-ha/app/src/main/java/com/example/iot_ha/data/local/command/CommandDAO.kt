@@ -21,4 +21,7 @@ interface CommandDAO {
 
     @Query("SELECT * FROM commands WHERE commandType = :type")
     fun getCommandsByTypeFlow(type: String): Flow<List<Command>>
+
+    @Query("SELECT * FROM commands")
+    fun getAllCommandsFlow(): Flow<List<Command>>
 }

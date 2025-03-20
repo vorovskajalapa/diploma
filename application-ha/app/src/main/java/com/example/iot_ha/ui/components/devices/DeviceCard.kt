@@ -1,5 +1,6 @@
 package com.example.iot_ha.ui.components.devices
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -44,8 +45,8 @@ fun DeviceCard(
     deviceId: Int,
     imageRes: Int,
     name: String,
-    type: String,
-    value: Any,
+    type: String? = null,
+    value: Any? = null,
     navController: NavHostController,
     onToggle: ((Boolean) -> Unit)? = null,
     onSliderChange: ((Float) -> Unit)? = null,
@@ -55,9 +56,7 @@ fun DeviceCard(
     var checked by remember { mutableStateOf(value as? Boolean ?: false) }
     var sliderValue by remember { mutableFloatStateOf(value as? Float ?: 0f) }
     var selectedOption by remember {
-        mutableStateOf(
-            value as? String ?: options.firstOrNull().orEmpty()
-        )
+        mutableStateOf(value as? String ?: options.firstOrNull().orEmpty())
     }
     var expanded by remember { mutableStateOf(false) }
 
@@ -88,74 +87,72 @@ fun DeviceCard(
                     fontWeight = FontWeight.Bold,
                     color = Color.Black
                 )
+
                 when (type) {
-                    "switch" -> {
-                        Switch(
-                            checked = checked,
-                            onCheckedChange = {
-                                checked = it
-                                onToggle?.invoke(it)
-                            },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = Color.White,
-                                checkedTrackColor = Color(0xFF4CAF50),
-                                uncheckedThumbColor = Color.White,
-                                uncheckedTrackColor = Color(0xFFF44336)
-                            )
+                    "switch" -> Switch(
+                        checked = checked,
+                        onCheckedChange = {
+                            checked = it
+                            onToggle?.invoke(it)
+                        },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = Color(0xFF4CAF50),
+                            uncheckedThumbColor = Color.White,
+                            uncheckedTrackColor = Color(0xFFF44336)
                         )
-                    }
+                    )
 
-                    "slider" -> {
-                        Slider(
-                            value = sliderValue,
-                            onValueChange = {
-                                sliderValue = it
-                                onSliderChange?.invoke(it)
-                            },
-                            valueRange = 0f..100f,
-                            colors = SliderDefaults.colors(
-                                thumbColor = Color(0xFF8A9F9B),
-                                activeTrackColor = Color(0xFFA6B6A9)
-                            )
+                    "slider" -> Slider(
+                        value = sliderValue,
+                        onValueChange = {
+                            sliderValue = it
+                            onSliderChange?.invoke(it)
+                        },
+                        valueRange = 0f..100f,
+                        colors = SliderDefaults.colors(
+                            thumbColor = Color(0xFF8A9F9B),
+                            activeTrackColor = Color(0xFFA6B6A9)
                         )
-                    }
+                    )
 
-                    "select" -> {
-                        ExposedDropdownMenuBox(
+                    "select" -> ExposedDropdownMenuBox(
+                        expanded = expanded,
+                        onExpandedChange = { expanded = it }
+                    ) {
+                        TextField(
+                            value = selectedOption,
+                            onValueChange = {},
+                            readOnly = true,
+                            modifier = Modifier.menuAnchor(),
+                            label = { Text("Выберите") },
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }
+                        )
+                        ExposedDropdownMenu(
                             expanded = expanded,
-                            onExpandedChange = { expanded = it }
+                            onDismissRequest = { expanded = false }
                         ) {
-                            TextField(
-                                value = selectedOption,
-                                onValueChange = {},
-                                readOnly = true,
-                                modifier = Modifier.menuAnchor(),
-                                label = { Text("Выберите") },
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) }
-                            )
-                            ExposedDropdownMenu(
-                                expanded = expanded,
-                                onDismissRequest = { expanded = false }
-                            ) {
-                                options.forEach { option ->
-                                    DropdownMenuItem(
-                                        text = { Text(option) },
-                                        onClick = {
-                                            selectedOption = option
-                                            expanded = false
-                                            onSelectChange?.invoke(option)
-                                        }
-                                    )
-                                }
+                            options.forEach { option ->
+                                DropdownMenuItem(
+                                    text = { Text(option) },
+                                    onClick = {
+                                        selectedOption = option
+                                        expanded = false
+                                        onSelectChange?.invoke(option)
+                                    }
+                                )
                             }
                         }
                     }
 
                     else -> {
-                        Text(text = value.toString(), fontSize = 14.sp, color = Color.Black)
+                        value?.let {
+                            Text(text = it.toString(), fontSize = 14.sp, color = Color.Black)
+                        }
                     }
                 }
             }
         }
     }
 }
+

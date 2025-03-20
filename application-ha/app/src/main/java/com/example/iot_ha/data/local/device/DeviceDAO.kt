@@ -35,4 +35,7 @@ interface DeviceDAO {
 
     @Query("SELECT COUNT(*) FROM devices WHERE roomId = :roomId")
     suspend fun getDeviceCountForRoom(roomId: Long): Int
+
+    @Query("SELECT * FROM devices")
+    fun getAllDevicesFlow(): Flow<List<Device>>
 }
