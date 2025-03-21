@@ -1,5 +1,6 @@
 package com.example.iot_ha.ui.navigation
 
+import LEDScreen
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -61,6 +62,10 @@ fun AppNavHost(
                 devicesViewModel = devicesViewModel,
                 roomsViewModel = roomsViewModel
             )
+        }
+
+        composable(Routes.LED_SETTINGS_SCREEN) {
+            LEDScreen()
         }
     }
 }

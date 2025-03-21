@@ -9,6 +9,7 @@ import com.example.iot_ha.data.local.broker.Broker
 import com.example.iot_ha.data.local.broker.BrokerState
 import com.example.iot_ha.data.mqtt.MQTTClient
 import com.example.iot_ha.data.mqtt.domain.MQTTMessageHandler
+import com.example.iot_ha.data.mqtt.util.Topics
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -63,10 +64,12 @@ class AuthorizationViewModel(
             onSuccess()
 
             viewModelScope.launch(Dispatchers.IO) {
-                mqttClient.subscribe("devicelist")
+                mqttClient.subscribe(Topics.SUBSCRIBE_DEVICE_LIST_TOPIC)
                 delay(500)
-                mqttClient.subscribe("homeassistant/#")
-                mqttClient.subscribe("zigbee/#")
+                mqttClient.subscribe(Topics.SUBSCRIBE_DEVICE_COMMANDS_TOPIC)
+                mqttClient.subscribe(Topics.SUBSCRIBE_DEVICE_STATE_TOPIC)
+
+                mqttClient.subscribe(Topics.SUBSCRIBE_LED_STATE_TOPIC)
             }
         }
     }

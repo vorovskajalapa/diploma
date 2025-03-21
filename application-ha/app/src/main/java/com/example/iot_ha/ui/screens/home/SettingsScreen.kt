@@ -26,12 +26,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.iot_ha.data.local.broker.discovery.DiscoveryState
-import com.example.iot_ha.data.mqtt.MQTTClient
+import com.example.iot_ha.ui.navigation.Routes
 import kotlinx.coroutines.delay
 
 @Composable
-fun SettingsScreen() {
+fun SettingsScreen(navHostController: NavController) {
     val discoveryState by DiscoveryState.isDiscoveryActive.collectAsState()
 
     var remainingTime by remember { mutableIntStateOf(0) }
@@ -104,6 +105,48 @@ fun SettingsScreen() {
                         color = Color.Black
                     )
                 }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFb697c4)),
+            elevation = CardDefaults.cardElevation(6.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "LED Settings",
+                        modifier = Modifier.weight(1f),
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+
+                Text(
+                    text = "Adjust LED brightness and color",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Black,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                androidx.compose.material3.Button(
+                    onClick = { navHostController.navigate(Routes.LED_SETTINGS_SCREEN) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = "Go to LED Settings")
+                }
+
             }
         }
     }

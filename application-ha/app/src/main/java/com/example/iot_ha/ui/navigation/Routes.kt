@@ -6,4 +6,6 @@ object Routes {
 
     const val DEVICE_DETAILS_SCREEN = "device_details/{deviceId}"
     const val ROOM_DETAILS_SCREEN = "room_details/{roomId}"
+
+    const val LED_SETTINGS_SCREEN = "home/led"
 }

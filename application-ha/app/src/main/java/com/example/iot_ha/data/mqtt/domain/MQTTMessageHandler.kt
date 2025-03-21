@@ -5,6 +5,7 @@ import com.example.iot_ha.data.local.broker.BrokerState
 import com.example.iot_ha.data.local.command.Command
 import com.example.iot_ha.data.local.device.Device
 import com.example.iot_ha.data.local.device.DeviceState
+import com.example.iot_ha.data.local.led.LEDState
 import com.example.iot_ha.data.mqtt.util.Topics
 import com.example.iot_ha.ui.viewmodels.shared.DevicesViewModel
 import com.example.iot_ha.ui.viewmodels.shared.SensorsViewModel
@@ -22,6 +23,7 @@ class MQTTMessageHandler(
             topic.startsWith(Topics.DEVICE_STATE_TOPIC) -> handleDeviceStateMessage(topic, payload)
             topic.startsWith(Topics.DEVICE_COMMANDS_TOPIC) -> handleDeviceCommandMessage(topic, payload)
             topic.startsWith(Topics.DEVICE_LIST_TOPIC) -> handleDeviceListMessage(payload)
+            topic.startsWith(Topics.LED_STATE_TOPIC) -> handleLEDState(payload)
             else -> Log.i("MQTTHandler", "⚠ Необрабатываемый топик: $topic")
         }
     }
@@ -34,6 +36,22 @@ class MQTTMessageHandler(
             DeviceState.updateDeviceData(deviceId, payload)
         } else {
             println("Устройство с IEEE Addr $ieeeAddr не найдено")
+        }
+    }
+
+    private fun handleLEDState(payload: String) {
+        try {
+            val json = JSONObject(payload)
+            if (json.getString("state") == "ON") {
+                LEDState.setBrightness(json.optInt("brightness", 127).toFloat())
+                json.optJSONObject("color")?.let { color ->
+                    LEDState.setRed(color.optInt("r", 127).toFloat())
+                    LEDState.setGreen(color.optInt("g", 127).toFloat())
+                    LEDState.setBlue(color.optInt("b", 127).toFloat())
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 

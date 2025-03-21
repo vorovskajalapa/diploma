@@ -83,6 +83,14 @@ object MQTTClient: MQTTMessaging, MQTTConnection {
         }
     }
 
+    override fun unsubscribe(topic: String) {
+        try {
+            mqttClient?.unsubscribe(topic)
+        } catch (e: MqttException) {
+            Log.e("MQTT", "Ошибка отписки: ${e.reasonCode} - ${e.message}")
+        }
+    }
+
     override fun publish(topic: String, payload: String, qos: Int, retained: Boolean) {
         try {
             val message = MqttMessage(payload.toByteArray()).apply {

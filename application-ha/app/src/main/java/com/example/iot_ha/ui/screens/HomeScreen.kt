@@ -99,7 +99,9 @@ fun HomeScreen(
 
 //                2 -> ScheduleScreen()
 
-                2 -> SettingsScreen()
+                2 -> SettingsScreen(
+                    navHostController = navHostController
+                )
 
             }
         }

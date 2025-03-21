@@ -1,76 +1,64 @@
-package com.example.iot_ha.ui.screens.home.settings
-
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import kotlin.math.roundToInt
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.iot_ha.data.local.led.LEDState
+import com.example.iot_ha.ui.components.settings.led.BrigtnessCard
+import com.example.iot_ha.ui.components.settings.led.ColorsCard
+import com.example.iot_ha.ui.viewmodels.LEDScreenViewModel
+import com.example.iot_ha.ui.viewmodels.factory.LEDScreenViewModelFactory
 
 @Composable
 fun LEDScreen() {
-    var brightness by remember { mutableStateOf(50) }
-    var red by remember { mutableStateOf(128) }
-    var green by remember { mutableStateOf(128) }
-    var blue by remember { mutableStateOf(128) }
+    val brightness by LEDState.brightness.collectAsState()
+    val red by LEDState.red.collectAsState()
+    val green by LEDState.green.collectAsState()
+    val blue by LEDState.blue.collectAsState()
 
-    val color = Color(red, green, blue)
+    val ledScreenViewModel: LEDScreenViewModel = viewModel(factory = LEDScreenViewModelFactory())
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Edit LED Settings", fontSize = 20.sp, modifier = Modifier.padding(bottom = 16.dp))
+        Text(text = "Edit LED Settings", style = MaterialTheme.typography.headlineSmall)
 
-        // Горизонтальный скролл для яркости
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
-                .padding(bottom = 16.dp)
-        ) {
-            Slider(value = brightness.toFloat(), onValueChange = { brightness = it.roundToInt() },
-                valueRange = 0f..100f)
-        }
+        Spacer(modifier = Modifier.height(16.dp))
 
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-            listOf("R" to red, "G" to green, "B" to blue).forEach { (label, value) ->
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(text = label, fontSize = 16.sp, modifier = Modifier.padding(bottom = 8.dp))
-                    Column(
-                        modifier = Modifier
-                            .height(150.dp)
-                            .verticalScroll(rememberScrollState())
-                    ) {
-                        Slider(
-                            value = value.toFloat(),
-                            onValueChange = {
-                                when (label) {
-                                    "R" -> red = it.roundToInt()
-                                    "G" -> green = it.roundToInt()
-                                    "B" -> blue = it.roundToInt()
-                                }
-                            },
-                            valueRange = 0f..255f
-                        )
-                    }
-                }
-            }
-        }
+        BrigtnessCard(
+            title = "Brightness",
+            color = Color(brightness / 255f, brightness / 255f, brightness / 255f),
+            value = brightness,
+            onValueChange = { LEDState.setBrightness(it) },
+            onValueChangeFinished = { ledScreenViewModel.sendLEDStatus() }
+        )
 
-        Box(
-            modifier = Modifier
-                .size(50.dp)
-                .background(color, shape = RoundedCornerShape(8.dp))
-                .padding(top = 16.dp)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        ColorsCard(
+            red = red,
+            green = green,
+            blue = blue,
+            onRedChange = { LEDState.setRed(it) },
+            onGreenChange = { LEDState.setGreen(it) },
+            onBlueChange = { LEDState.setBlue(it) },
+            onValueChangeFinished = { ledScreenViewModel.sendLEDStatus() }
         )
     }
 }
