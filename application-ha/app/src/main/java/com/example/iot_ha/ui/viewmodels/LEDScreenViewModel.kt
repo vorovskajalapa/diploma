@@ -9,7 +9,7 @@ import com.example.iot_ha.data.mqtt.util.Topics
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-class LEDScreenViewModel(): ViewModel() {
+class LEDScreenViewModel : ViewModel() {
 
     fun sendLEDStatus() {
         viewModelScope.launch {

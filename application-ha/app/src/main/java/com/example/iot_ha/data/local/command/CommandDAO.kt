@@ -12,7 +12,6 @@ interface CommandDAO {
     @Query("SELECT * FROM commands WHERE commandTopic = :commandTopic LIMIT 1")
     suspend fun getCommandByCommandTopic(commandTopic: String): Command?
 
-
     @Query("SELECT * FROM commands WHERE deviceId = :deviceId AND commandType = 'switch' LIMIT 1")
     suspend fun getSwitchCommandByDeviceId(deviceId: Int): Command?
 
