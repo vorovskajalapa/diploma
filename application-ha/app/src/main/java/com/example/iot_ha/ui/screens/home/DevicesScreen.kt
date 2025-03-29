@@ -23,8 +23,6 @@ import com.example.iot_ha.utils.toBooleanState
 
 @Composable
 fun DevicesScreen(navHostController: NavHostController, devicesViewModel: DevicesViewModel) {
-
-    val devices by devicesViewModel.devices.collectAsState()
     val switchDevices by devicesViewModel.getDevicesByTypeFlow("switch").collectAsState()
     val devicesWithoutCommands by devicesViewModel.getDevicesWithoutCommandsFlow().collectAsState()
 
@@ -39,7 +37,6 @@ fun DevicesScreen(navHostController: NavHostController, devicesViewModel: Device
                 .padding(16.dp)
         ) {
             devicesWithoutCommands.forEach { device ->
-
                 DeviceCard(
                     deviceId = device.id,
                     imageRes = R.drawable.mqtt_logo,
@@ -52,9 +49,7 @@ fun DevicesScreen(navHostController: NavHostController, devicesViewModel: Device
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-
             switchDevices.forEach { device ->
-
                 val deviceData = deviceState[device.id]
 
                 DeviceCard(
@@ -70,9 +65,6 @@ fun DevicesScreen(navHostController: NavHostController, devicesViewModel: Device
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
-
-
         }
     }
 }
-

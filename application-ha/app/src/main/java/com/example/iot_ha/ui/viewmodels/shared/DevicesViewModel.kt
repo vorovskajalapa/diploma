@@ -8,6 +8,7 @@ import com.example.iot_ha.data.local.broker.BrokerState
 import com.example.iot_ha.data.local.command.Command
 import com.example.iot_ha.data.local.device.Device
 import com.example.iot_ha.data.mqtt.MQTTClient
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -25,6 +26,11 @@ class DevicesViewModel(private val db: RoomLocalDatabase) : ViewModel() {
                     loadDevices(brokerId)
                 }
             }
+
+            while (true) {
+                updateDevices()
+                delay(3000)
+            }
         }
     }
 
@@ -36,12 +42,19 @@ class DevicesViewModel(private val db: RoomLocalDatabase) : ViewModel() {
             }
     }
 
+    private suspend fun updateDevices() {
+        val devicesList = db.deviceDAO().getAllDevices()
+        _devices.value = devicesList
+    }
+
+
     fun getDeviceIdByIeeeAddr(ieeeAddr: String, callback: (Int?) -> Unit) {
         viewModelScope.launch {
             val device = db.deviceDAO().getDeviceByIeeeAddr(ieeeAddr)
             callback(device?.id)
         }
     }
+
 
     fun getDevicesByTypeFlow(type: String): StateFlow<List<Device>> {
         val resultFlow = MutableStateFlow<List<Device>>(emptyList())
