@@ -1702,7 +1702,7 @@ AppNavHost.kt
 
 1571. package com.example.iot_ha.ui.navigation
 1572. 
-1573. import LEDScreen
+1573. import com.example.iot_ha.ui.screens.home.settings.LEDScreen
 1574. import androidx.compose.runtime.Composable
 1575. import androidx.compose.ui.platform.LocalContext
 1576. import androidx.lifecycle.viewmodel.compose.viewModel
@@ -1767,7 +1767,7 @@ AppNavHost.kt
 1635.         }
 1636. 
 1637.         composable(Routes.LED_SETTINGS_SCREEN) {
-1638.             LEDScreen()
+1638.             com.example.iot_ha.ui.screens.home.settings.LEDScreen()
 1639.         }
 1640.     }
 1641. }
@@ -2592,7 +2592,7 @@ SettingsScreen.kt
 2427. }
 
 
-LEDScreen.kt
+com.example.iot_ha.ui.screens.home.settings.LEDScreen.kt
 
 2428. import androidx.compose.foundation.layout.Column
 2429. import androidx.compose.foundation.layout.Spacer
@@ -2618,7 +2618,7 @@ LEDScreen.kt
 2449. import com.example.iot_ha.ui.viewmodels.factory.LEDScreenViewModelFactory
 2450. 
 2451. @Composable
-2452. fun LEDScreen() {
+2452. fun com.example.iot_ha.ui.screens.home.settings.LEDScreen() {
 2453.     val brightness by LEDState.brightness.collectAsState()
 2454.     val red by LEDState.red.collectAsState()
 2455.     val green by LEDState.green.collectAsState()

@@ -1,6 +1,6 @@
 package com.example.iot_ha.ui.navigation
 
-import LEDScreen
+import com.example.iot_ha.ui.screens.home.settings.LEDScreen
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel

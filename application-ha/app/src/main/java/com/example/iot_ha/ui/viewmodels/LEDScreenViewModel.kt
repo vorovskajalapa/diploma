@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 
 class LEDScreenViewModel : ViewModel() {
 
+    // Отправить статус LED
     fun sendLEDStatus() {
         viewModelScope.launch {
             val brightness = LEDState.brightness.first().toInt()
@@ -26,6 +27,27 @@ class LEDScreenViewModel : ViewModel() {
             )
 
             MQTTClient.publish(Topics.LED_SET_STATE_TOPIC, ledStatus.toJson())
+        }
+    }
+
+    fun setAUTOMode() {
+        viewModelScope.launch {
+            // Статус AUTO
+            val ledAutoStatus = """
+                {
+                  "state": "OFF",
+                  "brightness": 255,
+                  "color": {
+                    "r": 255,
+                    "g": 255,
+                    "b": 255
+                  },
+                  "color_mode": "rgb",
+                  "mode": "auto"
+                }
+            """.trimIndent()
+
+            MQTTClient.publish(Topics.LED_SET_STATE_TOPIC, ledAutoStatus)
         }
     }
 }

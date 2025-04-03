@@ -1,6 +1,5 @@
 package com.example.iot_ha.ui.viewmodels.shared
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.example.iot_ha.ui.viewmodels.shared.data.SensorsData
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,9 +11,5 @@ class SensorsViewModel : ViewModel() {
 
     fun updateSensorData(topic: String, payload: String) {
         _sensorData.value += (topic to SensorsData(topic, payload))
-    }
-
-    fun test() {
-        Log.i("ViewModel", "TESTING MESSAGE")
     }
 }
