@@ -35,6 +35,11 @@ class AuthorizationViewModel(
     }
 
     fun addBroker(serverUri: String, serverPort: Int, user: String?, password: String?) {
+        if (serverUri.isBlank()) return
+        val uriPattern = "^(http|https|mqtt|mqtts)://[a-zA-Z0-9.-]+(:[0-9]+)?".toRegex()
+        if (!uriPattern.matches(serverUri)) return
+        if (serverPort !in 1..65535) return
+
         viewModelScope.launch {
             val broker = Broker(
                 serverUri = serverUri,
@@ -46,6 +51,7 @@ class AuthorizationViewModel(
             loadBrokers()
         }
     }
+
 
     fun deleteBroker(broker: Broker) {
         viewModelScope.launch {
