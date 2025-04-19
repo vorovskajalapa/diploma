@@ -42,8 +42,6 @@ object MQTTClient: MQTTMessaging, MQTTConnection {
                 MqttClient("tcp://${broker?.serverUri}:${broker?.serverPort}", clientId, null)
 
             val options = MqttConnectOptions().apply {
-                userName = broker?.user
-                password = broker?.password?.toCharArray()
                 isAutomaticReconnect = true
                 isCleanSession = true
             }

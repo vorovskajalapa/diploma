@@ -38,7 +38,7 @@ fun LEDScreen() {
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
-            .verticalScroll(rememberScrollState()),     
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(text = "Edit LED Settings", style = MaterialTheme.typography.headlineSmall)

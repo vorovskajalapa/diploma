@@ -32,6 +32,7 @@ class LEDScreenViewModel : ViewModel() {
 
     fun setAUTOMode() {
         viewModelScope.launch {
+            // Статус AUTO
             val ledAutoStatus = """
                 {
                   "state": "OFF",
