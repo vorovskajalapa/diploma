@@ -1,6 +1,7 @@
 package com.example.iot_ha.data.local.device
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -38,4 +39,11 @@ interface DeviceDAO {
 
     @Query("SELECT * FROM devices")
     fun getAllDevicesFlow(): Flow<List<Device>>
+
+    @Delete
+    suspend fun deleteDevice(device: Device)
+
+    @Query("DELETE FROM devices WHERE id = :deviceId")
+    suspend fun deleteDeviceById(deviceId: Int)
+
 }

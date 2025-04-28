@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class DevicesViewModel(private val db: RoomLocalDatabase) : ViewModel() {
+open class DevicesViewModel(private val db: RoomLocalDatabase) : ViewModel() {
     private val _devices = MutableStateFlow<List<Device>>(emptyList())
     val devices: StateFlow<List<Device>> = _devices
 

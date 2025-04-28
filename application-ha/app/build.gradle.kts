@@ -58,6 +58,9 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    androidTestImplementation("androidx.room:room-testing:2.6.1")
+    androidTestImplementation("com.google.truth:truth:1.1.3")
+
 
     val room_version = "2.6.1"
 
